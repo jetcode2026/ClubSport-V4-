@@ -12,11 +12,14 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     
-    <!-- Babel CDN (for compiling JSX live in the browser) -->
+    <!-- Babel CDN -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <!-- Lucide Icons CDN -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Recharts CDN -->
+    <script src="https://unpkg.com/recharts/umd/Recharts.min.js"></script>
+    
+    <!-- Lucide-React Icons CDN -->
+    <script src="https://unpkg.com/lucide-react/umd/lucide-react.min.js"></script>
 </head>
 <body class="bg-slate-50 font-sans text-slate-900">
     
@@ -25,6 +28,27 @@
 
     <!-- Your application code -->
     <script type="text/babel">
+        
+        // 1. Get React hooks
+        const { useState, useMemo, useEffect } = React;
+        
+        // 2. Get Recharts components
+        const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } = window.Recharts;
+        
+        // 3. Get Lucide React Icons
+        const { 
+          Menu, X, Search, Bell, MapPin, ChevronDown, 
+          Users, Calendar, CheckSquare, DollarSign, 
+          TrendingUp, Settings, Shield, Globe, Database, 
+          CreditCard, Download, Plus, Search: SearchIcon, // Notice we rename Search to SearchIcon here
+          ArrowUpRight, MoreVertical, LayoutDashboard,
+          Activity, GraduationCap, Trophy, MessageSquare,
+          Briefcase, ShoppingBag, Package, FileText, Smartphone,
+          Clock, User, AlertCircle, CalendarDays, Filter,
+          ChevronLeft, ChevronRight, Repeat, Key,
+          Mail, Send, History, Phone, Megaphone, Inbox, Hash, Paperclip,
+          AlertTriangle, CheckCircle, Heart, Wallet, Award, CalendarCheck, FileSignature, Trash2, Upload, Edit3, LogIn, Lock
+        } = window.lucideReact;
 
 const Card = ({ children, className = '' }) => (
   <div className={`bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden ${className}`}>
