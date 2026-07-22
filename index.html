@@ -5,21 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ClubManager Application</title>
     
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+<!-- React 18 & ReactDOM CDNs -->
+<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+<!-- Babel CDN -->
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <!-- React 18 & ReactDOM CDNs -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    
-    <!-- Babel CDN -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- Recharts CDN -->
-    <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
-    
-    <!-- Lucide-React Icons CDN -->
-    <script src="https://unpkg.com/lucide-react@0.263.1/dist/umd/lucide-react.js"></script>
 </head>
 <body class="bg-slate-50 font-sans text-slate-900">
     
@@ -27,28 +22,29 @@
     <div id="root"></div>
 
     <!-- Your application code -->
-    <script type="text/babel">
+    <script type="text/babel" data-type="module">
         
         // 1. Get React hooks
         const { useState, useMemo, useEffect } = React;
         
         // 2. Get Recharts components
-        const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } = window.Recharts;
+        import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } 
+  from "https://esm.sh/recharts@2.12.7?external=react,react-dom";
         
         // 3. Get Lucide React Icons
-        const { 
-          Menu, X, Search, Bell, MapPin, ChevronDown, 
-          Users, Calendar, CheckSquare, DollarSign, 
-          TrendingUp, Settings, Shield, Globe, Database, 
-          CreditCard, Download, Plus, Search: SearchIcon, // Notice we rename Search to SearchIcon here
-          ArrowUpRight, MoreVertical, LayoutDashboard,
-          Activity, GraduationCap, Trophy, MessageSquare,
-          Briefcase, ShoppingBag, Package, FileText, Smartphone,
-          Clock, User, AlertCircle, CalendarDays, Filter,
-          ChevronLeft, ChevronRight, Repeat, Key,
-          Mail, Send, History, Phone, Megaphone, Inbox, Hash, Paperclip,
-          AlertTriangle, CheckCircle, Heart, Wallet, Award, CalendarCheck, FileSignature, Trash2, Upload, Edit3, LogIn, Lock
-        } = window.lucideReact;
+       import { 
+  Menu, X, Search, Bell, MapPin, ChevronDown, 
+  Users, Calendar, CheckSquare, DollarSign, 
+  TrendingUp, Settings, Shield, Globe, Database, 
+  CreditCard, Download, Plus, Search as SearchIcon,
+  ArrowUpRight, MoreVertical, LayoutDashboard,
+  Activity, GraduationCap, Trophy, MessageSquare,
+  Briefcase, ShoppingBag, Package, FileText, Smartphone,
+  Clock, User, AlertCircle, CalendarDays, Filter,
+  ChevronLeft, ChevronRight, Repeat, Key,
+  Mail, Send, History, Phone, Megaphone, Inbox, Hash, Paperclip,
+  AlertTriangle, CheckCircle, Heart, Wallet, Award, CalendarCheck, FileSignature, Trash2, Upload, Edit3, LogIn, Lock
+} from "https://esm.sh/lucide-react@0.383.0?external=react,react-dom";
 
 const Card = ({ children, className = '' }) => (
   <div className={`bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden ${className}`}>
