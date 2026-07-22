@@ -9,8 +9,15 @@
 <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 
 <!-- React 18 & ReactDOM CDNs -->
-<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.3.1",
+    "react-dom": "https://esm.sh/react-dom@18.3.1",
+    "react-dom/client": "https://esm.sh/react-dom@18.3.1/client"
+  }
+}
+</script>
 
 <!-- Babel CDN -->
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -24,15 +31,15 @@
     <!-- Your application code -->
     <script type="text/babel" data-type="module">
         
-        // 1. Get React hooks
-        const { useState, useMemo, useEffect } = React;
-        
-        // 2. Get Recharts components
-        import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } 
+<script type="text/babel" data-type="module">
+
+import React, { useState, useMemo, useEffect } from "react";
+import ReactDOM from "react-dom/client";
+
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } 
   from "https://esm.sh/recharts@2.12.7?external=react,react-dom";
-        
-        // 3. Get Lucide React Icons
-       import { 
+
+import { 
   Menu, X, Search, Bell, MapPin, ChevronDown, 
   Users, Calendar, CheckSquare, DollarSign, 
   TrendingUp, Settings, Shield, Globe, Database, 
