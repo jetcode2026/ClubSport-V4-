@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClubManager Application</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    
+    <!-- React 18 & ReactDOM CDNs -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel CDN (for compiling JSX live in the browser) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-50 font-sans text-slate-900">
+    
+    <!-- Root element where the App mounts -->
+    <div id="root"></div>
+
+    <!-- Your application code -->
+    <script type="text/babel">
+        const { useState, useMemo, useEffect } = React;
+
+        // --- PASTE YOUR ENTIRE CODE FILE HERE (remove the top import statements) ---
+        // (The code you provided goes here, starting from `const Card = ...` down to `export default function App()`)
+        // Make sure to change "export default function App()" to just "function App()" 
+        // since it is running inside a single global script.
+
+        // Mount the app to the root DOM node:
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
