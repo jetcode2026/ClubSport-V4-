@@ -2126,6 +2126,261 @@ const StaffManagementPage = ({ members, staffList, setStaffList, adminLoggedInSt
 };
 
 const AdminSettingsPage = ({ rankStructures, setRankStructures, ageGroups, setAgeGroups, clubDocuments, setClubDocuments }) => {
+  const [showAddRankModal, setShowAddRankModal] = useState(false);
+  const [showEditRankModal, setShowEditRankModal] = useState(false);
+  const [editingRank, setEditingRank] = useState(null);
+  
+  const [newRankForm, setNewRankForm] = useState({ name: '', requiredClasses: 20, timeframeMonths: 6, color: 'bg-blue-600' });
+  const [newAgeGroupInput, setNewAgeGroupInput] = useState('');
+
+  const [showUploadDocModal, setShowUploadDocModal] = useState(false);
+  const [newDocForm, setNewDocForm] = useState({ name: '', type: 'Waiver', fileUrl: '#' });
+
+  const beltColors = [
+    { label: 'White Belt', value: 'bg-white border border-slate-300' },
+    { label: 'Yellow Belt', value: 'bg-yellow-400' },
+    { label: 'Orange Belt', value: 'bg-orange-500' },
+    { label: 'Green Belt', value: 'bg-emerald-500' },
+    { label: 'Blue Belt', value: 'bg-blue-600' },
+    { label: 'Purple Belt', value: 'bg-purple-600' },
+    { label: 'Brown Belt', value: 'bg-amber-800' },
+    { label: 'Black Belt', value: 'bg-slate-900 text-white' },
+  ];
+
+  const handleAddRankSubmit = (e) => {
+    e.preventDefault();
+    const created = {
+      id: Date.now(),
+      ...newRankForm
+    };
+    setRankStructures([...rankStructures, created]);
+    setShowAddRankModal(false);
+    setNewRankForm({ name: '', requiredClasses: 20, timeframeMonths: 6, color: 'bg-blue-600' });
+  };
+
+  const handleStartEditRank = (rank) => {
+    setEditingRank(rank);
+    setNewRankForm({ name: rank.name, requiredClasses: rank.requiredClasses, timeframeMonths: rank.timeframeMonths || 6, color: rank.color });
+    setShowEditRankModal(true);
+  };
+
+  const handleSaveEditRank = (e) => {
+    e.preventDefault();
+    if (!editingRank) return;
+    setRankStructures(rankStructures.map(r => r.id === editingRank.id ? { ...r, ...newRankForm } : r));
+    setShowEditRankModal(false);
+    setEditingRank(null);
+  };
+
+  const handleDeleteRank = (rankId) => {
+    setRankStructures(rankStructures.filter(r => r.id !== rankId));
+  };
+
+  const handleAddAgeGroup = (e) => {
+    e.preventDefault();
+    if (newAgeGroupInput.trim() && !ageGroups.includes(newAgeGroupInput.trim())) {
+      setAgeGroups([...ageGroups, newAgeGroupInput.trim()]);
+      setNewAgeGroupInput('');
+    }
+  };
+
+  const handleRemoveAgeGroup = (group) => {
+    setAgeGroups(ageGroups.filter(ag => ag !== group));
+  };
+
+  const handleUploadDocSubmit = (e) => {
+    e.preventDefault();
+    const created = {
+      id: `DOC-${Date.now()}`,
+      name: newDocForm.name,
+      type: newDocForm.type,
+      uploadedAt: new Date().toISOString().split('T')[0],
+      size: '1.2 MB'
+    };
+    setClubDocuments([...clubDocuments, created]);
+    setShowUploadDocModal(false);
+    setNewDocForm({ name: '', type: 'Waiver', fileUrl: '#' });
+  };
+
+  const handleDeleteDoc = (docId) => {
+    setClubDocuments(clubDocuments.filter(d => d.id !== docId));
+  };
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-500 pb-12 max-w-5xl">
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">Club Rank & Settings</h1>
+        <p className="text-slate-500">Configure rank hierarchy, attendance/timeframe requirements, age groups, and document templates.</p>
+      </div>
+
+      <Card className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2"><Award className="w-5 h-5 text-blue-600"/> Rank Structures & Requirements</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Define promotion class counts and minimum timeframe requirements per rank.</p>
+          </div>
+          <Button icon={Plus} onClick={() => {
+            setNewRankForm({ name: '', requiredClasses: 20, timeframeMonths: 6, color: 'bg-blue-600' });
+            setShowAddRankModal(true);
+          }}>Add Rank</Button>
+        </div>
+
+        <div className="space-y-3">
+          {rankStructures.map(rs => (
+            <div key={rs.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl gap-4">
+              <div className="flex items-center gap-4">
+                <div className={`w-6 h-6 rounded-full ${rs.color} shrink-0 shadow-2xs`}></div>
+                <div>
+                  <h4 className="font-bold text-slate-900 text-sm">{rs.name}</h4>
+                  <div className="text-xs text-slate-500 mt-0.5">
+                    Required Classes: <strong className="text-slate-700">{rs.requiredClasses}</strong> • Min Timeframe: <strong className="text-slate-700">{rs.timeframeMonths || 6} months</strong>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" icon={Edit3} onClick={() => handleStartEditRank(rs)}>Edit</Button>
+                <Button variant="danger" size="sm" icon={Trash2} onClick={() => handleDeleteRank(rs.id)}>Remove</Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card className="p-6">
+        <div className="mb-6">
+          <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2"><Users className="w-5 h-5 text-emerald-600"/> Pre-determined Age Groups</h3>
+          <p className="text-xs text-slate-500 mt-0.5">Manage age groups available when building or scheduling classes.</p>
+        </div>
+
+        <form onSubmit={handleAddAgeGroup} className="flex gap-3 mb-6">
+          <div className="flex-1">
+            <Input placeholder="e.g. Teens (12-15) or Masters (30+)" value={newAgeGroupInput} onChange={e => setNewAgeGroupInput(e.target.value)} />
+          </div>
+          <Button type="submit">Add Age Group</Button>
+        </form>
+
+        <div className="flex flex-wrap gap-2">
+          {ageGroups.map(ag => (
+            <div key={ag} className="flex items-center gap-2 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-lg text-sm font-medium text-slate-800">
+              <span>{ag}</span>
+              <button onClick={() => handleRemoveAgeGroup(ag)} className="text-slate-400 hover:text-rose-600 transition-colors">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2"><FileText className="w-5 h-5 text-indigo-600"/> Documents & Templates</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Upload and manage risk waivers, incident reports, and membership agreements.</p>
+          </div>
+          <Button icon={Upload} onClick={() => setShowUploadDocModal(true)}>Upload Document</Button>
+        </div>
+
+        <div className="space-y-3">
+          {clubDocuments.map(doc => (
+            <div key={doc.id} className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-indigo-100 text-indigo-600 rounded-lg">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-900 text-sm">{doc.name}</h4>
+                  <div className="text-xs text-slate-500 mt-0.5 flex gap-3">
+                    <span>Type: <strong className="text-slate-700">{doc.type}</strong></span>
+                    <span>Uploaded: <strong className="text-slate-700">{doc.uploadedAt}</strong></span>
+                    <span>Size: <strong className="text-slate-700">{doc.size}</strong></span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" icon={Download}>Download</Button>
+                <Button variant="danger" size="sm" icon={Trash2} onClick={() => handleDeleteDoc(doc.id)}>Remove</Button>
+              </div>
+            </div>
+          ))}
+          {clubDocuments.length === 0 && (
+            <div className="text-center py-8 text-slate-400 text-sm">No documents uploaded yet.</div>
+          )}
+        </div>
+      </Card>
+
+      {/* Admin Settings Modals */}
+      {showAddRankModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white border border-slate-200 p-6 rounded-2xl max-w-md w-full mx-4 shadow-2xl">
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Add New Rank</h3>
+            <form onSubmit={handleAddRankSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Rank Name</label>
+                <Input required placeholder="e.g. Orange Belt" value={newRankForm.name} onChange={e => setNewRankForm({...newRankForm, name: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Required Classes</label>
+                <Input required type="number" value={newRankForm.requiredClasses} onChange={e => setNewRankForm({...newRankForm, requiredClasses: Number(e.target.value)})} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Required Timeframe (Months)</label>
+                <Input required type="number" value={newRankForm.timeframeMonths} onChange={e => setNewRankForm({...newRankForm, timeframeMonths: Number(e.target.value)})} placeholder="6" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Belt Color / Badge</label>
+                <select 
+                  className="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-lg p-2.5 outline-none"
+                  value={newRankForm.color}
+                  onChange={e => setNewRankForm({...newRankForm, color: e.target.value})}
+                >
+                  {beltColors.map(bc => <option key={bc.value} value={bc.value}>{bc.label}</option>)}
+                </select>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button type="button" variant="outline" className="flex-1" onClick={() => setShowAddRankModal(false)}>Cancel</Button>
+                <Button type="submit" className="flex-1">Create Rank</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showEditRankModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white border border-slate-200 p-6 rounded-2xl max-w-md w-full mx-4 shadow-2xl">
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Edit Rank Requirements</h3>
+            <form onSubmit={handleSaveEditRank} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Rank Name</label>
+                <Input required placeholder="e.g. Orange Belt" value={newRankForm.name} onChange={e => setNewRankForm({...newRankForm, name: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Required Classes</label>
+                <Input required type="number" value={newRankForm.requiredClasses} onChange={e => setNewRankForm({...newRankForm, requiredClasses: Number(e.target.value)})} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Required Timeframe (Months)</label>
+                <Input required type="number" value={newRankForm.timeframeMonths} onChange={e => setNewRankForm({...newRankForm, timeframeMonths: Number(e.target.value)})} placeholder="6" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Belt Color / Badge</label>
+                <select 
+                  className="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-lg p-2.5 outline-none"
+                  value={newRankForm.color}
+                  onChange={e => setNewRankForm({...newRankForm, color: e.target.value})}
+                >
+                  {beltColors.map(bc => <option key={bc.value} value={bc.value}>{bc.label}</option>)}
+                </select>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button type="button" variant="outline" className="flex-1" onClick={() => setShowEditRankModal(false)}>Cancel</Button>
+                <Button type="submit" className="flex-1">Save Changes</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {showUploadDocModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white border border-slate-200 p-6 rounded-2xl max-w-md w-full mx-4 shadow-2xl">
@@ -2364,7 +2619,6 @@ const KioskView = ({ onExit, members, setMembers, classes, staffList }) => {
              </div>
           )}
 
-          {}
           {step === 'select-class' && (
              <div className="w-full max-w-xl bg-slate-800/80 border border-slate-700 backdrop-blur-md rounded-3xl shadow-2xl p-10 animate-in zoom-in-95 duration-300">
                 <div className="text-center mb-8">
