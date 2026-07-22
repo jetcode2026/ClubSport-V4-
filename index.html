@@ -25,7 +25,7 @@
 
     <!-- Your application code -->
     <script type="text/babel">
-        const { useState, useMemo, useEffect } = React;
+
 const Card = ({ children, className = '' }) => (
   <div className={`bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden ${className}`}>
     {children}
@@ -2565,7 +2565,7 @@ const KioskView = ({ onExit, members, setMembers, classes, staffList }) => {
   );
 };
 
-function App() {
+export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activePortal, setActivePortal] = useState('staff');
   const [currentRoute, setCurrentRoute] = useState('dashboard');
