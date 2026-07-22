@@ -26,7 +26,2546 @@
     <!-- Your application code -->
     <script type="text/babel">
         const { useState, useMemo, useEffect } = React;
+const Card = ({ children, className = '' }) => (
+  <div className={`bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden ${className}`}>
+    {children}
+  </div>
+);
 
+const Button = ({ children, variant = 'primary', size = 'md', icon: Icon, className = '', onClick, type = 'button', disabled = false }) => {
+  const baseStyle = "inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
+  const variants = {
+    primary: "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 shadow-sm",
+    secondary: "bg-slate-100 text-slate-700 hover:bg-slate-200 focus:ring-slate-500",
+    outline: "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 focus:ring-slate-500",
+    danger: "bg-rose-600 text-white hover:bg-rose-700 focus:ring-rose-500",
+    ghost: "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+  };
+  const sizes = {
+    sm: "px-3 py-1.5 text-xs",
+    md: "px-4 py-2 text-sm",
+    lg: "px-6 py-3 text-base"
+  };
+  return (
+    <button type={type} disabled={disabled} className={`${baseStyle} ${variants[variant]} ${sizes[size]} ${className}`} onClick={onClick}>
+      {Icon && <Icon className={`w-4 h-4 ${children ? 'mr-2' : ''}`} />}
+      {children}
+    </button>
+  );
+};
+
+const Input = ({ icon: Icon, className = '', ...props }) => (
+  <div className="relative w-full">
+    {Icon && <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />}
+    <input 
+      className={`w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block ${Icon ? 'pl-10' : 'pl-3'} p-2.5 transition-colors ${className}`}
+      {...props}
+    />
+  </div>
+);
+
+const Badge = ({ children, variant = 'gray', className = '' }) => {
+  const variants = {
+    green: "bg-emerald-100 text-emerald-800 border-emerald-200",
+    yellow: "bg-amber-100 text-amber-800 border-amber-200",
+    red: "bg-rose-100 text-rose-800 border-rose-200",
+    blue: "bg-blue-100 text-blue-800 border-blue-200",
+    gray: "bg-slate-100 text-slate-800 border-slate-200"
+  };
+  return (
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${variants[variant]} ${className}`}>
+      {children}
+    </span>
+  );
+};
+
+const generatePin = () => Math.floor(1000 + Math.random() * 9000).toString();
+
+const getElapsedHours = (start, end) => {
+  if (!start || !end) return 0;
+  const parseTime = (timeStr) => {
+    // Basic parser for HH:MM 24h format
+    const parts = timeStr.match(/(\d+):(\d+)\s*(AM|PM)?/i);
+    if (!parts) return 0;
+    let hours = parseInt(parts[1], 10);
+    const minutes = parseInt(parts[2], 10);
+    const ampm = parts[3] ? parts[3].toUpperCase() : null;
+    
+    if (ampm === 'PM' && hours < 12) hours += 12;
+    if (ampm === 'AM' && hours === 12) hours = 0;
+    
+    return hours + minutes / 60;
+  };
+  
+  // If parsing simple 24h time strings from inputs
+  const startHrs = parseTime(start);
+  const endHrs = parseTime(end);
+  let duration = endHrs - startHrs;
+  if (duration < 0) duration += 24; // Handle overnight shifts
+  return duration.toFixed(1);
+};
+
+const getMonthsDiff = (startDateStr, endDateStr) => {
+  if (!startDateStr) return 0;
+  const start = new Date(startDateStr);
+  const end = new Date(endDateStr);
+  return end.getMonth() - start.getMonth() + (12 * (end.getFullYear() - start.getFullYear()));
+};
+
+const INITIAL_STAFF = [
+  { id: 'STF-1', name: 'Coach Davis', role: 'Head Coach', email: 'davis@club.com', status: 'Active', classes: 18, pin: '4821', wage: 45.00, roster: { day: 'Monday - Friday', start: '14:00', end: '20:00' } },
+  { id: 'STF-2', name: 'Prof. Mendes', role: 'Owner', email: 'mendes@club.com', status: 'Active', classes: 24, pin: '9103', wage: 0.00, roster: { day: 'Monday - Saturday', start: '08:00', end: '12:00' } },
+  { id: 'STF-3', name: 'Kru Silva', role: 'Lead instructor', email: 'silva@club.com', status: 'Active', classes: 15, pin: '3372', wage: 35.00, roster: { day: 'Tue, Thu, Sat', start: '16:00', end: '21:00' } },
+  { id: 'STF-4', name: 'Jessica Wong', role: 'Assistant', email: 'jessica@club.com', status: 'Active', classes: 0, pin: '1984', wage: 22.00, roster: { day: 'Monday - Friday', start: '15:00', end: '19:00' } },
+];
+
+const DEMO_MEMBERS = [
+  { 
+    id: 'M-101', name: 'Sarah Jenkins', type: 'Adult BJJ', status: 'Active', joined: '2023-01-15', 
+    email: 'sarah.j@example.com', phone: '(555) 123-4567', parent: null,
+    balance: 0.00, credit: 50.00,
+    paymentMethods: [
+      { id: 'pm-1', name: 'Visa', expiry: '12/28', type: 'Credit Card' },
+      { id: 'pm-2', name: 'Mastercard', expiry: '09/27', type: 'Credit Card' }
+    ],
+    emergency: { name: 'Tom Jenkins', phone: '(555) 999-8888', relation: 'Spouse' },
+    medical: 'No known allergies. Previous ACL tear (2021) - fully cleared.',
+    rank: { 
+      belt: 'Blue Belt', color: 'bg-blue-600', stripes: 3, 
+      lastPromoted: '2025-01-15', nextEligibleDate: '2026-01-15', 
+      timeframeMonths: 12, classesSincePromotion: 45, requiredClasses: 60 
+    },
+    attendance: { total: 142, thisMonth: 12, streak: 3, lastAttended: '2026-07-20', history: [
+      { id: 'h1', date: '2026-07-20', className: 'Adult BJJ (Advanced)' },
+      { id: 'h2', date: '2026-07-18', className: 'Adult BJJ Fundamentals' },
+    ]},
+    documents: [
+      { id: 1, name: 'Liability Waiver', status: 'Signed', date: '2023-01-15' },
+      { id: 2, name: 'Membership Agreement', status: 'Signed', date: '2023-01-15' },
+      { id: 3, name: 'Medical Release', status: 'Pending', date: '-' },
+    ]
+  },
+  { 
+    id: 'M-102', name: 'Mike Ross', type: 'Muay Thai', status: 'Active', joined: '2023-03-22', 
+    email: 'mike.ross@example.com', phone: '(555) 987-6543', parent: null,
+    balance: 199.00, credit: 0.00,
+    paymentMethods: [{ id: 'pm-3', name: 'Amex', expiry: '04/26', type: 'Credit Card' }],
+    emergency: { name: 'Rachel Zane', phone: '(555) 444-5555', relation: 'Partner' },
+    medical: 'Asthma - carries inhaler in gym bag.',
+    rank: { 
+      belt: 'Level 3 / Yellow', color: 'bg-yellow-400', stripes: 0, 
+      lastPromoted: '2026-05-01', nextEligibleDate: '2026-11-01', 
+      timeframeMonths: 6, classesSincePromotion: 22, requiredClasses: 30 
+    },
+    attendance: { total: 88, thisMonth: 4, streak: 0, lastAttended: '2026-07-15', history: [] },
+    documents: [
+      { id: 1, name: 'Liability Waiver', status: 'Signed', date: '2023-03-22' },
+      { id: 2, name: 'Membership Agreement', status: 'Signed', date: '2023-03-22' },
+    ]
+  },
+  { 
+    id: 'M-103', name: 'Emily Chen', type: 'Kids Judo', status: 'Frozen', joined: '2024-05-10', 
+    email: 'parent.chen@example.com', phone: '(555) 456-7890', parent: 'David Chen',
+    balance: 0.00, credit: 0.00,
+    paymentMethods: [{ id: 'pm-4', name: 'Apple Pay', expiry: '11/29', type: 'Digital Wallet' }],
+    emergency: { name: 'David Chen', phone: '(555) 456-7890', relation: 'Father' },
+    medical: 'Peanut allergy. EpiPen in front desk medkit.',
+    rank: { 
+      belt: 'White Belt', color: 'bg-white border-2 border-slate-300', stripes: 2, 
+      lastPromoted: '2024-05-10', nextEligibleDate: '2024-08-10', 
+      timeframeMonths: 3, classesSincePromotion: 15, requiredClasses: 20 
+    },
+    attendance: { total: 32, thisMonth: 0, streak: 0, lastAttended: '2026-06-25', history: [] },
+    documents: [
+      { id: 1, name: 'Liability Waiver (Minor)', status: 'Signed', date: '2024-05-10' },
+      { id: 2, name: 'Membership Agreement', status: 'Signed', date: '2024-05-10' },
+    ]
+  }
+];
+
+const DEMO_INVOICES = [
+  { id: 'INV-1024', member: 'Sarah Jenkins', amount: 149.00, status: 'Paid', date: '2026-07-21', method: 'Direct Debit', type: 'Recurring Membership' },
+  { id: 'INV-1023', member: 'Emily Chen', amount: 89.00, status: 'Pending', date: '2026-07-21', method: 'Apple Pay', type: 'Uniform Sale' },
+  { id: 'INV-1022', member: 'Mike Ross', amount: 199.00, status: 'Failed', date: '2026-07-20', method: 'Credit Card', type: 'Recurring Membership', retryCount: 2, error: 'Insufficient Funds' },
+  { id: 'INV-1021', member: 'Sarah Jenkins', amount: 0.00, status: 'Paid', date: '2026-07-19', method: 'Scholarship', type: 'Monthly Dues' },
+  { id: 'INV-1020', member: 'David Lee', amount: 120.00, status: 'Paid', date: '2026-07-18', method: 'Split (Cash/Card)', type: 'Equipment Sale' },
+  { id: 'INV-1019', member: 'Jessica Wong', amount: 135.00, status: 'Refunded', date: '2026-07-15', method: 'Credit Card', type: 'Tournament Fee', discount: 'Coupon: SUMMER10' }
+];
+
+const INITIAL_CLASSES = [
+  { id: 'C-001', day: 'Tuesday', title: 'Adult BJJ (Advanced)', type: 'Recurring', startTime: '06:00 AM', endTime: '07:30 AM', ageGroup: 'Adults (16+)', rankGroup: 'Blue & Above', facility: 'Main Mat', capacity: 30, hasCapacity: true, enrolled: 30, waitlist: 4, isHoliday: false },
+  { id: 'C-002', day: 'Tuesday', title: 'Muay Thai Fundamentals', type: 'Recurring', startTime: '05:30 PM', endTime: '06:30 PM', ageGroup: 'Teens & Adults', rankGroup: 'All Levels', facility: 'Heavy Bags Area', capacity: 20, hasCapacity: true, enrolled: 18, waitlist: 0, isHoliday: false },
+  { id: 'C-003', day: 'Tuesday', title: 'Kids Judo (Ages 7-10)', type: 'Recurring', startTime: '04:00 PM', endTime: '05:00 PM', ageGroup: 'Kids (8-11)', rankGroup: 'Beginner / White', facility: 'Main Mat', capacity: 25, hasCapacity: true, enrolled: 22, waitlist: 0, isHoliday: false },
+  { id: 'C-004', day: 'Wednesday', title: 'Adult BJJ Fundamentals', type: 'Recurring', startTime: '07:00 PM', endTime: '08:00 PM', ageGroup: 'Adults (16+)', rankGroup: 'White & Blue', facility: 'Main Mat', capacity: 35, hasCapacity: true, enrolled: 28, waitlist: 0, isHoliday: false },
+  { id: 'C-005', day: 'Thursday', title: 'Advanced Sparring', type: 'Recurring', startTime: '06:30 PM', endTime: '08:00 PM', ageGroup: 'Adults (16+)', rankGroup: 'Blue & Above', facility: 'Main Mat', capacity: 25, hasCapacity: true, enrolled: 25, waitlist: 3, isHoliday: false },
+  { id: 'C-006', day: 'Friday', title: 'Open Mat / Free Training', type: 'Event', startTime: '05:00 PM', endTime: '07:00 PM', ageGroup: 'Adults (16+)', rankGroup: 'All Levels', facility: 'Main Mat', capacity: 50, hasCapacity: false, enrolled: 40, waitlist: 0, isHoliday: false },
+  { id: 'C-007', day: 'Monday', title: 'Junior Competition Prep', type: 'Recurring', startTime: '10:00 AM', endTime: '11:30 AM', ageGroup: 'Teens (12-15)', rankGroup: 'Yellow & Above', facility: 'Main Mat', capacity: 20, hasCapacity: true, enrolled: 15, waitlist: 0, isHoliday: false },
+];
+
+const DEMO_CAMPAIGNS = [
+  { id: 1, name: 'Summer Seminar Promo', type: 'Email', status: 'Sent', sent: 1245, openRate: '42%', date: '2026-07-15' },
+  { id: 2, name: 'Failed Payment Reminder', type: 'Automated SMS', status: 'Active', sent: 12, openRate: '98%', date: 'Ongoing' },
+  { id: 3, name: 'Holiday Closure', type: 'Push Notification', status: 'Scheduled', sent: 0, openRate: '-', date: '2026-07-24' },
+];
+
+const DEMO_MESSAGES_LIST = [
+  { id: 1, user: 'Sarah Jenkins', preview: 'Hi Coach, I will be late today...', time: '10:42 AM', unread: true, type: 'Coach-to-Student' },
+  { id: 2, user: 'David Chen (Emily)', preview: 'Thanks for the progress report!', time: 'Yesterday', unread: false, type: 'Parent Messaging' },
+  { id: 3, user: 'Adult BJJ Group', preview: 'Reminder: Open mat at 10AM tomorrow.', time: 'Jul 19', unread: false, type: 'Group Messaging' },
+  { id: 4, user: 'Mike Ross', preview: 'Is the 6AM class still on?', time: 'Jul 18', unread: false, type: 'Coach-to-Student' },
+  { id: 5, user: 'Jessica Wong', preview: 'Payment method updated.', time: 'Jul 18', unread: false, type: 'Billing' },
+];
+
+const BeltVisualizer = ({ color, stripes }) => (
+  <div className="flex items-center gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-sm w-full max-w-sm">
+    <div className={`h-10 w-32 rounded-sm shadow-inner flex items-center justify-end pr-2 ${color}`}>
+      <div className="h-full w-8 bg-slate-900 flex flex-col justify-evenly py-1 items-end pr-1 border-l border-slate-800">
+        {Array.from({length: 4}).map((_, i) => (
+          <div key={i} className={`h-1.5 w-full rounded-sm ${i < stripes ? 'bg-white shadow-sm' : 'bg-transparent'}`}></div>
+        ))}
+      </div>
+    </div>
+    <div>
+      <div className="font-bold text-slate-900 capitalize">{color.includes('bg-') ? color.split('-')[1].replace(' white', '') : 'White'} Belt</div>
+      <div className="text-xs text-slate-500 font-medium">{stripes} / 4 Stripes</div>
+    </div>
+  </div>
+);
+
+const PlaceholderPage = ({ title, icon: Icon, description }) => (
+  <div className="flex-1 flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-500 h-full">
+    <div className="bg-white p-6 rounded-full shadow-sm mb-6 border border-slate-100">
+      <Icon className="w-12 h-12 text-slate-300" />
+    </div>
+    <h2 className="text-2xl font-semibold text-slate-800 mb-2">{title}</h2>
+    <p className="text-slate-500 max-w-md">{description}</p>
+  </div>
+);
+
+const DashboardPage = ({ classes }) => {
+  const todayClasses = classes.filter(c => c.day === 'Tuesday');
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-500 pb-12">
+      <h1 className="text-2xl font-bold text-slate-900">Staff Dashboard</h1>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-500">Today's Check-ins</p>
+              <p className="text-3xl font-bold text-slate-900 mt-2">124</p>
+            </div>
+            <div className="bg-blue-50 p-3 rounded-lg"><CheckSquare className="w-6 h-6 text-blue-600"/></div>
+          </div>
+          <div className="mt-4 flex items-center text-sm text-emerald-600 font-medium">
+            <ArrowUpRight className="w-4 h-4 mr-1"/> +12% from yesterday
+          </div>
+        </Card>
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-500">Active Trials</p>
+              <p className="text-3xl font-bold text-slate-900 mt-2">18</p>
+            </div>
+            <div className="bg-amber-50 p-3 rounded-lg"><Users className="w-6 h-6 text-amber-600"/></div>
+          </div>
+          <div className="mt-4 flex items-center text-sm text-slate-500">
+            3 conversions this week
+          </div>
+        </Card>
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-500">Pending Tasks</p>
+              <p className="text-3xl font-bold text-slate-900 mt-2">5</p>
+            </div>
+            <div className="bg-rose-50 p-3 rounded-lg"><Activity className="w-6 h-6 text-rose-600"/></div>
+          </div>
+          <div className="mt-4 flex items-center text-sm text-slate-500">
+            2 high priority follow-ups
+          </div>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="p-6 lg:col-span-2 flex flex-col">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2"><Calendar className="w-5 h-5 text-blue-600"/> Today's Timetable (Tuesday)</h3>
+            <span className="text-xs font-semibold bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full">{todayClasses.length} Classes</span>
+          </div>
+          <div className="space-y-3 overflow-y-auto max-h-[400px] pr-1">
+            {todayClasses.map(cls => (
+              <div key={cls.id} className="bg-slate-50 border border-slate-200 p-4 rounded-xl flex justify-between items-center hover:bg-slate-100/60 transition-colors">
+                <div>
+                  <div className="font-bold text-slate-900 text-sm">{cls.title}</div>
+                  <div className="text-xs text-blue-600 font-semibold mt-1">{cls.startTime} - {cls.endTime}</div>
+                  <div className="flex gap-2 mt-2">
+                    <span className="text-[10px] bg-white border border-slate-200 text-slate-600 px-2 py-0.5 rounded">{cls.ageGroup}</span>
+                    <span className="text-[10px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded">{cls.rankGroup}</span>
+                  </div>
+                </div>
+                {cls.hasCapacity && (
+                  <div className="text-right">
+                    <div className="text-xs font-semibold text-slate-700">{cls.enrolled} / {cls.capacity}</div>
+                    <div className="text-[10px] text-slate-400">Enrolled</div>
+                  </div>
+                )}
+              </div>
+            ))}
+            {todayClasses.length === 0 && (
+              <div className="text-center py-8 text-slate-400 text-sm">No classes scheduled for today.</div>
+            )}
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <h3 className="text-lg font-bold text-slate-900 mb-4">Recent Activity</h3>
+          <div className="space-y-4">
+            <div className="flex items-start gap-3 pb-3 border-b border-slate-100">
+              <span className="w-2 h-2 mt-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+              <div>
+                <div className="text-xs font-semibold text-slate-900">Sarah Jenkins checked in</div>
+                <div className="text-[11px] text-slate-400 mt-0.5">10 mins ago</div>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 pb-3 border-b border-slate-100">
+              <span className="w-2 h-2 mt-1.5 rounded-full bg-blue-500 shrink-0"></span>
+              <div>
+                <div className="text-xs font-semibold text-slate-900">Mike Ross payment processed</div>
+                <div className="text-[11px] text-slate-400 mt-0.5">25 mins ago</div>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="w-2 h-2 mt-1.5 rounded-full bg-amber-500 shrink-0"></span>
+              <div>
+                <div className="text-xs font-semibold text-slate-900">New trial registered</div>
+                <div className="text-[11px] text-slate-400 mt-0.5">1 hour ago</div>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+const ClassesPage = ({ classes, setClasses, ageGroups }) => {
+  const [showAddClassModal, setShowAddClassModal] = useState(false);
+  const [showEditClassModal, setShowEditClassModal] = useState(false);
+  const [editingClass, setEditingClass] = useState(null);
+  const [isDeleteTimetableMode, setIsDeleteTimetableMode] = useState(false);
+  
+  const [newClassForm, setNewClassForm] = useState({
+    title: '', day: 'Monday', startTime: '09:00 AM', endTime: '10:00 AM',
+    ageGroup: ageGroups[0] || 'Adults (16+)', rankGroup: 'All Levels', facility: 'Main Mat', 
+    hasCapacity: true, capacity: 25
+  });
+
+  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+  const handleAddClass = (e) => {
+    e.preventDefault();
+    const created = {
+      id: `C-${Date.now()}`,
+      ...newClassForm,
+      type: 'Recurring',
+      enrolled: 0,
+      waitlist: 0,
+      isHoliday: false
+    };
+    setClasses([...classes, created]);
+    setShowAddClassModal(false);
+    setNewClassForm({
+      title: '', day: 'Monday', startTime: '09:00 AM', endTime: '10:00 AM',
+      ageGroup: ageGroups[0] || 'Adults (16+)', rankGroup: 'All Levels', facility: 'Main Mat', 
+      hasCapacity: true, capacity: 25
+    });
+  };
+
+  const handleStartEditClass = (cls) => {
+    setEditingClass(cls);
+    setNewClassForm({
+      title: cls.title,
+      day: cls.day,
+      startTime: cls.startTime || '09:00 AM',
+      endTime: cls.endTime || '10:00 AM',
+      ageGroup: cls.ageGroup || ageGroups[0] || 'Adults (16+)',
+      rankGroup: cls.rankGroup || 'All Levels',
+      facility: cls.facility || 'Main Mat',
+      hasCapacity: cls.hasCapacity !== undefined ? cls.hasCapacity : true,
+      capacity: cls.capacity || 25
+    });
+    setShowEditClassModal(true);
+  };
+
+  const handleSaveEditClass = (e) => {
+    e.preventDefault();
+    if (!editingClass) return;
+    setClasses(classes.map(c => c.id === editingClass.id ? { ...c, ...newClassForm } : c));
+    setShowEditClassModal(false);
+    setEditingClass(null);
+  };
+
+  const handleDeleteClass = (classId) => {
+    setClasses(prevClasses => prevClasses.filter(c => c.id !== classId));
+  };
+
+  return (
+    <div className="space-y-6 h-full flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Classes & Schedule</h1>
+          <p className="text-slate-500">Connected weekly calendar timetable and class builder.</p>
+        </div>
+        <div className="flex gap-2">
+          <Button 
+            variant={isDeleteTimetableMode ? 'danger' : 'outline'} 
+            icon={Trash2} 
+            onClick={() => setIsDeleteTimetableMode(!isDeleteTimetableMode)}
+          >
+            {isDeleteTimetableMode ? 'Done Deleting' : 'Edit Timetable'}
+          </Button>
+          <Button icon={Plus} onClick={() => {
+            setNewClassForm({
+              title: '', day: 'Monday', startTime: '09:00 AM', endTime: '10:00 AM',
+              ageGroup: ageGroups[0] || 'Adults (16+)', rankGroup: 'All Levels', facility: 'Main Mat', 
+              hasCapacity: true, capacity: 25
+            });
+            setShowAddClassModal(true);
+          }}>Add Class</Button>
+        </div>
+      </div>
+
+      <Card className="flex-1 flex flex-col overflow-hidden shadow-sm bg-white border border-slate-200">
+        <div className="overflow-x-auto flex-1 flex flex-col min-h-[500px]">
+          <div className="grid grid-cols-7 min-w-[1750px] bg-slate-100 border-b border-slate-200 text-center font-bold text-xs text-slate-700 uppercase tracking-wider py-3 shrink-0">
+            {daysOfWeek.map(d => (
+              <div key={d} className="border-r border-slate-200 last:border-0 px-2">{d}</div>
+            ))}
+          </div>
+          <div className="grid grid-cols-7 min-w-[1750px] flex-1 bg-slate-50/50 divide-x divide-slate-200">
+            {daysOfWeek.map(day => {
+              const dayClasses = classes.filter(c => c.day === day);
+              return (
+                <div key={day} className="p-3 flex flex-col gap-3 overflow-y-auto bg-white max-h-[650px]">
+                  {dayClasses.map(cls => (
+                    <div key={cls.id} className="bg-slate-50 border border-slate-200/80 p-3 rounded-lg shadow-2xs hover:border-blue-300 transition-colors relative group">
+                      <div className="font-bold text-slate-900 text-xs leading-snug pr-14">{cls.title}</div>
+                      <div className="text-[11px] text-blue-600 font-semibold mt-1">{cls.startTime} - {cls.endTime}</div>
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        <span className="text-[9px] bg-slate-200 text-slate-700 px-1 py-0.5 rounded">{cls.ageGroup}</span>
+                        <span className="text-[9px] bg-indigo-50 text-indigo-700 px-1 py-0.5 rounded">{cls.rankGroup}</span>
+                      </div>
+                      {cls.hasCapacity && (
+                        <div className="text-[10px] text-slate-500 mt-1.5">Capacity: {cls.enrolled}/{cls.capacity}</div>
+                      )}
+                      <div className="absolute top-2 right-2 flex items-center gap-1">
+                        <button 
+                          type="button"
+                          onClick={() => handleStartEditClass(cls)}
+                          className="text-slate-400 hover:text-blue-600 p-1 rounded bg-white border border-slate-200 shadow-2xs transition-colors"
+                          title="Edit Class"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                        {isDeleteTimetableMode && (
+                          <button 
+                            type="button"
+                            onClick={() => handleDeleteClass(cls.id)}
+                            className="text-rose-500 hover:text-rose-700 p-1 rounded bg-white border border-slate-200 shadow-2xs transition-colors animate-pulse"
+                            title="Delete Class"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {dayClasses.length === 0 && (
+                    <div className="h-full flex items-center justify-center text-xs text-slate-400 py-12 italic">No classes</div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </Card>
+
+      {/* Add Class Modal */}
+      {showAddClassModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white border border-slate-200 p-6 rounded-2xl max-w-md w-full mx-4 shadow-2xl">
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Schedule New Class</h3>
+            <form onSubmit={handleAddClass} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Class Title</label>
+                <Input required placeholder="e.g. Advanced BJJ" value={newClassForm.title} onChange={e => setNewClassForm({...newClassForm, title: e.target.value})} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Day of Week</label>
+                  <select 
+                    className="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-lg p-2.5 outline-none"
+                    value={newClassForm.day}
+                    onChange={e => setNewClassForm({...newClassForm, day: e.target.value})}
+                  >
+                    {daysOfWeek.map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Capacity Limit</label>
+                  <div className="flex items-center gap-3 mt-2">
+                    <input 
+                      type="checkbox" 
+                      checked={newClassForm.hasCapacity} 
+                      onChange={e => setNewClassForm({...newClassForm, hasCapacity: e.target.checked})}
+                      className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                    />
+                    <span className="text-xs font-medium text-slate-700">{newClassForm.hasCapacity ? 'Enabled' : 'Unlimited'}</span>
+                  </div>
+                </div>
+              </div>
+              {newClassForm.hasCapacity && (
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Max Capacity</label>
+                  <Input required type="number" value={newClassForm.capacity} onChange={e => setNewClassForm({...newClassForm, capacity: Number(e.target.value)})} />
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Start Time</label>
+                  <Input required placeholder="06:00 PM" value={newClassForm.startTime} onChange={e => setNewClassForm({...newClassForm, startTime: e.target.value})} />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">End Time</label>
+                  <Input required placeholder="07:30 PM" value={newClassForm.endTime} onChange={e => setNewClassForm({...newClassForm, endTime: e.target.value})} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Age Group</label>
+                  <select 
+                    className="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-lg p-2.5 outline-none"
+                    value={newClassForm.ageGroup}
+                    onChange={e => setNewClassForm({...newClassForm, ageGroup: e.target.value})}
+                  >
+                    {ageGroups.map(ag => <option key={ag} value={ag}>{ag}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Rank Group</label>
+                  <Input required placeholder="All Levels" value={newClassForm.rankGroup} onChange={e => setNewClassForm({...newClassForm, rankGroup: e.target.value})} />
+                </div>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button type="button" variant="outline" className="flex-1" onClick={() => setShowAddClassModal(false)}>Cancel</Button>
+                <Button type="submit" className="flex-1">Create Class</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Class Modal */}
+      {showEditClassModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white border border-slate-200 p-6 rounded-2xl max-w-md w-full mx-4 shadow-2xl">
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Edit Class Details</h3>
+            <form onSubmit={handleSaveEditClass} className="space-y-4">
+              {/* Similar fields as Add Modal */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Class Title</label>
+                <Input required placeholder="e.g. Advanced BJJ" value={newClassForm.title} onChange={e => setNewClassForm({...newClassForm, title: e.target.value})} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Day of Week</label>
+                  <select 
+                    className="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-lg p-2.5 outline-none"
+                    value={newClassForm.day}
+                    onChange={e => setNewClassForm({...newClassForm, day: e.target.value})}
+                  >
+                    {daysOfWeek.map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Capacity Limit</label>
+                  <div className="flex items-center gap-3 mt-2">
+                    <input 
+                      type="checkbox" 
+                      checked={newClassForm.hasCapacity} 
+                      onChange={e => setNewClassForm({...newClassForm, hasCapacity: e.target.checked})}
+                      className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                    />
+                    <span className="text-xs font-medium text-slate-700">{newClassForm.hasCapacity ? 'Enabled' : 'Unlimited'}</span>
+                  </div>
+                </div>
+              </div>
+              {newClassForm.hasCapacity && (
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Max Capacity</label>
+                  <Input required type="number" value={newClassForm.capacity} onChange={e => setNewClassForm({...newClassForm, capacity: Number(e.target.value)})} />
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Start Time</label>
+                  <Input required placeholder="06:00 PM" value={newClassForm.startTime} onChange={e => setNewClassForm({...newClassForm, startTime: e.target.value})} />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">End Time</label>
+                  <Input required placeholder="07:30 PM" value={newClassForm.endTime} onChange={e => setNewClassForm({...newClassForm, endTime: e.target.value})} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Age Group</label>
+                  <select 
+                    className="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-lg p-2.5 outline-none"
+                    value={newClassForm.ageGroup}
+                    onChange={e => setNewClassForm({...newClassForm, ageGroup: e.target.value})}
+                  >
+                    {ageGroups.map(ag => <option key={ag} value={ag}>{ag}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Rank Group</label>
+                  <Input required placeholder="All Levels" value={newClassForm.rankGroup} onChange={e => setNewClassForm({...newClassForm, rankGroup: e.target.value})} />
+                </div>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button type="button" variant="outline" className="flex-1" onClick={() => setShowEditClassModal(false)}>Cancel</Button>
+                <Button type="submit" className="flex-1">Save Changes</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const MembersPage = ({ members, setMembers, rankStructures, classes, staffList }) => {
+  const [selectedId, setSelectedId] = useState(members[0]?.id || 'M-101');
+  const [tab, setTab] = useState('overview');
+  const [msgMode, setMsgMode] = useState('sms');
+  const [manageDropdownOpen, setManageDropdownOpen] = useState(false);
+  const [rankDropdownOpen, setRankDropdownOpen] = useState(false);
+  const [studentListCollapsed, setStudentListCollapsed] = useState(false);
+
+  // Billing Manual Edit / Admin Auth States
+  const [showAdminPinModal, setShowAdminPinModal] = useState(false);
+  const [adminPinInput, setAdminPinInput] = useState('');
+  const [pendingBillingAction, setPendingBillingAction] = useState(null); // 'payment' | 'balance'
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showBalanceModal, setShowBalanceModal] = useState(false);
+  const [showAddCardModal, setShowAddCardModal] = useState(false);
+  const [pinError, setPinError] = useState(false);
+  
+  const [newPaymentForm, setNewPaymentForm] = useState({ amount: 50, description: 'Uniform / Gear Sale', method: 'Credit Card' });
+  const [newBalanceAmount, setNewBalanceAmount] = useState('');
+  const [newCardForm, setNewCardForm] = useState({ name: 'Visa', expiry: '12/29' });
+
+  // Rank / Attendance States
+  const [showRankOverrideModal, setShowRankOverrideModal] = useState(false);
+  const [promoTargetRank, setPromoTargetRank] = useState(null);
+  const [promoErrorMsg, setPromoErrorMsg] = useState('');
+  const [overridePin, setOverridePin] = useState('');
+  const [overridePinError, setOverridePinError] = useState('');
+  const [attendanceView, setAttendanceView] = useState('lifetime');
+  const [showManualSignIn, setShowManualSignIn] = useState(false);
+  const [signInForm, setSignInForm] = useState({ date: new Date().toISOString().split('T')[0], classId: '' });
+
+  const member = members.find(m => m.id === selectedId) || members[0];
+
+  const handleAddStripe = () => {
+    const updated = members.map(m => {
+      if (m.id === member.id) {
+        const newStripes = Math.min(4, m.rank.stripes + 1);
+        return { ...m, rank: { ...m.rank, stripes: newStripes } };
+      }
+      return m;
+    });
+    setMembers(updated);
+  };
+
+  const getClassesForDate = (dateString) => {
+    if (!dateString) return [];
+    const date = new Date(dateString);
+    const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' });
+    return classes.filter(c => c.day === dayOfWeek);
+  };
+
+  const handleManualSignIn = (e) => {
+    e.preventDefault();
+    const cls = classes.find(c => c.id === signInForm.classId);
+    if (!cls) return;
+
+    const newHistory = {
+      id: `h-${Date.now()}`,
+      date: signInForm.date,
+      className: cls.title
+    };
+
+    const updated = members.map(m => {
+      if (m.id === member.id) {
+        return {
+          ...m,
+          rank: { ...m.rank, classesSincePromotion: m.rank.classesSincePromotion + 1 },
+          attendance: {
+            ...m.attendance,
+            total: m.attendance.total + 1,
+            thisMonth: m.attendance.thisMonth + 1,
+            lastAttended: signInForm.date,
+            history: [newHistory, ...(m.attendance.history || [])]
+          }
+        };
+      }
+      return m;
+    });
+    setMembers(updated);
+    setShowManualSignIn(false);
+    setSignInForm({ date: new Date().toISOString().split('T')[0], classId: '' });
+  };
+
+  const executePromotion = (targetRank) => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const promoDate = new Date();
+    promoDate.setMonth(promoDate.getMonth() + (targetRank.timeframeMonths || 6));
+    const nextEligibleStr = promoDate.toISOString().split('T')[0];
+
+    const updated = members.map(m => {
+      if (m.id === member.id) {
+        return {
+          ...m,
+          rank: {
+            ...m.rank,
+            belt: targetRank.name,
+            color: targetRank.color,
+            stripes: 0,
+            lastPromoted: todayStr,
+            nextEligibleDate: nextEligibleStr,
+            timeframeMonths: targetRank.timeframeMonths || 6,
+            classesSincePromotion: 0,
+            requiredClasses: targetRank.requiredClasses
+          }
+        };
+      }
+      return m;
+    });
+    setMembers(updated);
+    setRankDropdownOpen(false);
+    setShowRankOverrideModal(false);
+    setOverridePin('');
+    setOverridePinError('');
+  };
+
+  const handleSelectBeltRank = (targetRank) => {
+    const classesMet = member.rank.classesSincePromotion >= targetRank.requiredClasses;
+    const monthsElapsed = getMonthsDiff(member.rank.lastPromoted, new Date().toISOString());
+    const timeMet = monthsElapsed >= (targetRank.timeframeMonths || 0);
+
+    if (!classesMet || !timeMet) {
+      setPromoTargetRank(targetRank);
+      let error = `Criteria not met for ${targetRank.name}.`;
+      if (!classesMet) error += ` Needs ${targetRank.requiredClasses - member.rank.classesSincePromotion} more classes.`;
+      if (!timeMet) error += ` Minimum timeframe of ${targetRank.timeframeMonths} months has not passed.`;
+      setPromoErrorMsg(error);
+      setShowRankOverrideModal(true);
+      return;
+    }
+    executePromotion(targetRank);
+  };
+
+  const attemptOverride = () => {
+    const staff = staffList.find(s => s.pin === overridePin);
+    if (!staff) {
+      setOverridePinError("Invalid PIN.");
+      return;
+    }
+    if (['Instructor', 'Lead instructor', 'Owner', 'Head Coach'].includes(staff.role)) {
+      executePromotion(promoTargetRank);
+    } else {
+      setOverridePinError("Permission Denied: Assistant coaches cannot override rank requirements.");
+    }
+  };
+
+  const handleBillingActionRequest = (actionType) => {
+    setPendingBillingAction(actionType);
+    setAdminPinInput('');
+    setPinError(false);
+    setShowAdminPinModal(true);
+  };
+
+  const handleVerifyAdminPin = () => {
+    if (adminPinInput === '1234' || staffList.some(s => s.pin === adminPinInput && ['Owner', 'Head Coach'].includes(s.role))) {
+      setShowAdminPinModal(false);
+      setPinError(false);
+      if (pendingBillingAction === 'payment') setShowPaymentModal(true);
+      if (pendingBillingAction === 'balance') setShowBalanceModal(true);
+    } else {
+      setPinError(true);
+      setAdminPinInput('');
+    }
+  };
+
+  const handleManualPaymentSubmit = (e) => {
+    e.preventDefault();
+    const updated = members.map(m => {
+      if (m.id === member.id) {
+        const newBalance = Math.max(0, m.balance - Number(newPaymentForm.amount));
+        return { ...m, balance: newBalance };
+      }
+      return m;
+    });
+    setMembers(updated);
+    setShowPaymentModal(false);
+  };
+
+  const handleBalanceUpdateSubmit = (e) => {
+    e.preventDefault();
+    const updated = members.map(m => {
+      if (m.id === member.id) {
+        return { ...m, balance: Number(newBalanceAmount) };
+      }
+      return m;
+    });
+    setMembers(updated);
+    setShowBalanceModal(false);
+    setNewBalanceAmount('');
+  };
+
+  const handleAddCardSubmit = (e) => {
+    e.preventDefault();
+    const updated = members.map(m => {
+      if (m.id === member.id) {
+        const currentMethods = m.paymentMethods || [];
+        const newMethod = { id: `pm-${Date.now()}`, name: newCardForm.name, expiry: newCardForm.expiry, type: 'Credit Card' };
+        return { ...m, paymentMethods: [...currentMethods, newMethod] };
+      }
+      return m;
+    });
+    setMembers(updated);
+    setShowAddCardModal(false);
+    setNewCardForm({ name: 'Visa', expiry: '12/29' });
+  };
+
+  const handleRemoveCard = (cardId) => {
+    const updated = members.map(m => {
+      if (m.id === member.id) {
+        const currentMethods = m.paymentMethods || [];
+        return { ...m, paymentMethods: currentMethods.filter(pm => pm.id !== cardId) };
+      }
+      return m;
+    });
+    setMembers(updated);
+  };
+
+  const attendanceChartData = useMemo(() => {
+    let history = member?.attendance?.history || [];
+    if (history.length === 0) return [];
+
+    // Filter data based on the selected timeframe view
+    if (attendanceView === 'rank') {
+      const lastPromoted = member?.rank?.lastPromoted || '1970-01-01';
+      history = history.filter(h => h.date >= lastPromoted);
+    } else if (attendanceView === 'month') {
+      const currentMonthPrefix = new Date().toISOString().substring(0, 7);
+      history = history.filter(h => h.date.startsWith(currentMonthPrefix));
+    }
+
+    if (history.length === 0) return [];
+
+    // Aggregate based on the view type (daily for month view, monthly for others)
+    const rawCounts = {};
+    history.forEach(h => {
+      const key = attendanceView === 'month' ? h.date : h.date.substring(0, 7);
+      rawCounts[key] = (rawCounts[key] || 0) + 1;
+    });
+    
+    // Format output for Recharts
+    return Object.keys(rawCounts).sort().map(key => {
+      if (attendanceView === 'month') {
+        const [y, m, d] = key.split('-');
+        const dateObj = new Date(y, m - 1, d);
+        return {
+          name: dateObj.toLocaleDateString('default', { month: 'short', day: 'numeric' }),
+          classes: rawCounts[key]
+        };
+      } else {
+        const [y, m] = key.split('-');
+        const dateObj = new Date(y, m - 1);
+        return {
+          name: dateObj.toLocaleString('default', { month: 'short' }) + ' ' + y.substring(2),
+          classes: rawCounts[key]
+        };
+      }
+    });
+  }, [member, attendanceView]);
+
+  return (
+    <div className="h-full flex flex-col md:flex-row gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {/* Member List Sidebar with Collapse Toggle */}
+      <div className={`transition-all duration-300 flex flex-col gap-4 ${studentListCollapsed ? 'w-20' : 'w-full md:w-80'}`}>
+        <div className="flex justify-between items-center">
+          {!studentListCollapsed && (
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Members</h1>
+              <p className="text-slate-500 text-sm">Manage student profiles & accounts.</p>
+            </div>
+          )}
+          <button 
+            onClick={() => setStudentListCollapsed(!studentListCollapsed)}
+            className="p-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 transition-colors ml-auto shadow-2xs"
+            title={studentListCollapsed ? "Expand member list" : "Collapse member list"}
+          >
+            {studentListCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+          </button>
+        </div>
+
+        {!studentListCollapsed && <Input icon={SearchIcon} placeholder="Search members..." />}
+
+        <div className="bg-white border border-slate-200 rounded-xl flex-1 overflow-y-auto shadow-sm">
+          {members.map(m => (
+            <div 
+              key={m.id} 
+              onClick={() => { setSelectedId(m.id); setTab('overview'); }}
+              className={`p-4 border-b border-slate-100 cursor-pointer transition-colors hover:bg-slate-50 ${selectedId === m.id ? 'bg-blue-50 border-l-4 border-l-blue-600' : 'border-l-4 border-l-transparent'} ${studentListCollapsed ? 'flex justify-center' : ''}`}
+              title={studentListCollapsed ? m.name : undefined}
+            >
+              {studentListCollapsed ? (
+                <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-sm shadow-2xs">
+                  {m.name.charAt(0)}
+                </div>
+              ) : (
+                <div>
+                  <div className="flex justify-between items-start">
+                    <div className="font-semibold text-slate-900">{m.name}</div>
+                    {m.balance > 0 && <span className="w-2 h-2 rounded-full bg-rose-500 mt-1.5"></span>}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1 flex justify-between">
+                    <span>{m.type}</span>
+                    <Badge variant={m.status === 'Active' ? 'green' : m.status === 'Frozen' ? 'yellow' : 'gray'}>{m.status}</Badge>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Member Profile Detail */}
+      <div className="flex-1 flex flex-col min-h-0 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-slate-200 bg-slate-50/50">
+          <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+            <div className="flex gap-4 items-center">
+              <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-2xl font-bold border-2 border-white shadow-sm ring-1 ring-slate-200">
+                {member.name.charAt(0)}
+              </div>
+              <div>
+                <div className="flex items-center gap-3">
+                  <h2 className="text-xl font-bold text-slate-900">{member.name}</h2>
+                  <Badge variant={member.status === 'Active' ? 'green' : member.status === 'Frozen' ? 'yellow' : 'gray'}>{member.status}</Badge>
+                </div>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-500 mt-1.5">
+                  <span className="flex items-center gap-1.5"><Hash className="w-4 h-4"/> {member.id}</span>
+                  <span className="flex items-center gap-1.5"><Mail className="w-4 h-4"/> {member.email}</span>
+                  <span className="flex items-center gap-1.5"><Phone className="w-4 h-4"/> {member.phone}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" icon={FileSignature}>Edit Profile</Button>
+              <div className="relative">
+                <Button 
+                  variant="primary" 
+                  size="sm" 
+                  icon={Settings} 
+                  onClick={() => setManageDropdownOpen(!manageDropdownOpen)}
+                >
+                  Manage
+                </Button>
+                {manageDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg z-20 py-1" onMouseLeave={() => setManageDropdownOpen(false)}>
+                    <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"><ArrowUpRight className="w-4 h-4 text-emerald-600"/> Upgrade Membership</button>
+                    <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"><Clock className="w-4 h-4 text-amber-600"/> Suspend Membership</button>
+                    <button className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"><Repeat className="w-4 h-4 text-blue-600"/> Renew Membership</button>
+                    <div className="h-px bg-slate-100 my-1"></div>
+                    <button className="w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 flex items-center gap-2"><X className="w-4 h-4"/> Cancel Membership</button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex gap-6 mt-6 -mb-6 overflow-x-auto hide-scrollbar">
+            {['overview', 'profile', 'rank', 'attendance', 'billing', 'communication', 'documents'].map(t => (
+              <button 
+                key={t}
+                onClick={() => setTab(t)}
+                className={`pb-3 text-sm font-medium border-b-2 transition-colors capitalize whitespace-nowrap ${tab === t ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-6 bg-slate-50/30">
+          
+          {tab === 'overview' && (
+            <div className="space-y-6 max-w-5xl">
+              {member.balance > 0 && (
+                <div className="bg-rose-50 border border-rose-200 text-rose-800 p-4 rounded-xl flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-semibold text-sm">Outstanding Balance: ${member.balance.toFixed(2)}</h4>
+                    <p className="text-sm mt-1 text-rose-700/80">This member has overdue invoices. Automatic door access may be restricted depending on facility settings.</p>
+                  </div>
+                  <Button variant="danger" size="sm" className="ml-auto whitespace-nowrap" onClick={() => handleBillingActionRequest('payment')}>Pay Now</Button>
+                </div>
+              )}
+              {member.documents.some(d => d.status === 'Pending') && (
+                <div className="bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-xl flex items-start gap-3">
+                  <FileSignature className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-semibold text-sm">Missing Documents</h4>
+                    <p className="text-sm mt-1 text-amber-700/80">One or more required documents are pending signature.</p>
+                  </div>
+                  <Button variant="outline" size="sm" className="ml-auto whitespace-nowrap bg-white">Send Reminder</Button>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="p-5 border-l-4 border-l-emerald-500">
+                  <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2"><CalendarCheck className="w-4 h-4"/> Attendance Summary</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-2xl font-bold text-slate-900">{member.attendance.thisMonth}</p>
+                      <p className="text-xs text-slate-500 mt-1">Classes This Month</p>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-slate-900">{member.attendance.streak}</p>
+                      <p className="text-xs text-slate-500 mt-1">Current Streak (Weeks)</p>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-slate-900">{member.attendance.total}</p>
+                      <p className="text-xs text-slate-500 mt-1">Total Lifetime Classes</p>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900 mt-1.5">{member.attendance.lastAttended}</p>
+                      <p className="text-xs text-slate-500 mt-1">Last Attended</p>
+                    </div>
+                  </div>
+                </Card>
+                
+                <Card className="p-5 border-l-4 border-l-blue-500">
+                  <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2"><Award className="w-4 h-4"/> Rank Progress</h3>
+                  <div className="mb-4">
+                    <BeltVisualizer color={member.rank.color} stripes={member.rank.stripes} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-xs font-medium text-slate-700">
+                      <span>Classes to next promotion</span>
+                      <span>{member.rank.classesSincePromotion} / {member.rank.requiredClasses}</span>
+                    </div>
+                    <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-blue-500 rounded-full" 
+                        style={{width: `${Math.min(100, (member.rank.classesSincePromotion / member.rank.requiredClasses) * 100)}%`}}
+                      ></div>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-2">Earliest grading eligibility date: {member.rank.nextEligibleDate || 'TBD'}</p>
+                  </div>
+                </Card>
+              </div>
+            </div>
+          )}
+
+          {tab === 'profile' && (
+            <div className="max-w-4xl space-y-6">
+              <Card className="p-6">
+                <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><User className="w-5 h-5 text-blue-600"/> Personal Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 uppercase mb-1">Full Name</label>
+                    <div className="text-sm font-medium text-slate-900">{member.name}</div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 uppercase mb-1">Date of Birth (Age)</label>
+                    <div className="text-sm font-medium text-slate-900">Jan 12, 1990 (36)</div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 uppercase mb-1">Email Address</label>
+                    <div className="text-sm font-medium text-slate-900">{member.email}</div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 uppercase mb-1">Phone Number</label>
+                    <div className="text-sm font-medium text-slate-900">{member.phone}</div>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-medium text-slate-500 uppercase mb-1">Address</label>
+                    <div className="text-sm font-medium text-slate-900">123 Main St, Apt 4B, New York, NY 10001</div>
+                  </div>
+                  {member.parent && (
+                    <div className="md:col-span-2 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                      <label className="block text-xs font-medium text-slate-500 uppercase mb-1">Primary Guardian / Parent</label>
+                      <div className="text-sm font-semibold text-slate-900">{member.parent}</div>
+                    </div>
+                  )}
+                </div>
+              </Card>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="p-6">
+                  <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><Phone className="w-5 h-5 text-rose-600"/> Emergency Contact</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-500 uppercase mb-1">Name</label>
+                      <div className="text-sm font-medium text-slate-900">{member.emergency.name}</div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-500 uppercase mb-1">Relationship</label>
+                      <div className="text-sm font-medium text-slate-900">{member.emergency.relation}</div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-500 uppercase mb-1">Phone</label>
+                      <div className="text-sm font-medium text-slate-900">{member.emergency.phone}</div>
+                    </div>
+                  </div>
+                </Card>
+
+                <Card className="p-6 border-l-4 border-l-amber-400">
+                  <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><Heart className="w-5 h-5 text-amber-500"/> Medical Information</h3>
+                  <div className="bg-amber-50/50 p-4 rounded-xl border border-amber-100 min-h-[140px]">
+                    <p className="text-sm text-slate-800 leading-relaxed">{member.medical}</p>
+                  </div>
+                </Card>
+              </div>
+            </div>
+          )}
+
+          {tab === 'rank' && (
+            <div className="max-w-4xl space-y-6">
+               <Card className="p-6">
+                  <div className="flex flex-col md:flex-row justify-between md:items-center gap-6 mb-6">
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2"><Award className="w-5 h-5 text-indigo-600"/> Martial Arts Progression</h3>
+                      <p className="text-sm text-slate-500 mt-1">Track belts, stripes, and testing eligibility.</p>
+                    </div>
+                    <div className="flex gap-2 relative">
+                       <Button variant="outline" size="sm" icon={Plus} onClick={handleAddStripe}>Add Stripe</Button>
+                       <div className="relative">
+                         <Button variant="primary" size="sm" icon={Award} onClick={() => setRankDropdownOpen(!rankDropdownOpen)}>Manage Rank</Button>
+                         {rankDropdownOpen && (
+                           <div className="absolute right-0 mt-2 w-64 bg-white border border-slate-200 rounded-xl shadow-xl z-30 py-2 animate-in fade-in duration-150">
+                             <div className="px-4 py-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-100 mb-1">Select New Rank</div>
+                             {rankStructures.map(rs => (
+                               <button 
+                                 key={rs.id}
+                                 onClick={() => handleSelectBeltRank(rs)}
+                                 className="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 flex items-center justify-between transition-colors"
+                               >
+                                 <span className="flex items-center gap-2">
+                                   <span className={`w-3.5 h-3.5 rounded-full ${rs.color} shrink-0 shadow-2xs`}></span>
+                                   {rs.name}
+                                 </span>
+                                 <span className="text-xs text-slate-400">{rs.requiredClasses} classes</span>
+                               </button>
+                             ))}
+                           </div>
+                         )}
+                       </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 p-6 bg-slate-50 rounded-xl border border-slate-200">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-500 uppercase mb-3">Current Rank</label>
+                      <BeltVisualizer color={member.rank.color} stripes={member.rank.stripes} />
+                      <div className="text-xs text-slate-500 mt-3 space-y-1">
+                        <div>Promoted On: <strong className="text-slate-700">{member.rank.lastPromoted || 'N/A'}</strong></div>
+                        <div>Earliest Next Grading: <strong className="text-indigo-600 font-semibold">{member.rank.nextEligibleDate || 'TBD'}</strong></div>
+                      </div>
+                    </div>
+                    <div className="space-y-4 justify-center flex flex-col">
+                      <div>
+                        <div className="flex justify-between text-sm font-medium text-slate-700 mb-1.5">
+                          <span>Class Requirements</span>
+                          <span>{member.rank.classesSincePromotion} / {member.rank.requiredClasses}</span>
+                        </div>
+                        <div className="h-3 w-full bg-slate-200 rounded-full overflow-hidden shadow-inner">
+                          <div 
+                            className="h-full bg-indigo-500 rounded-full transition-all duration-1000" 
+                            style={{width: `${Math.min(100, (member.rank.classesSincePromotion / member.rank.requiredClasses) * 100)}%`}}
+                          ></div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm bg-white p-3 rounded-lg border border-slate-200 shadow-2xs">
+                         <span className="font-semibold text-slate-900">Grading Status:</span>
+                         {member.rank.classesSincePromotion >= member.rank.requiredClasses ? (
+                           <Badge variant="green" className="ml-auto">Attendance Requirements Met</Badge>
+                         ) : (
+                           <Badge variant="yellow" className="ml-auto">Needs {member.rank.requiredClasses - member.rank.classesSincePromotion} more classes</Badge>
+                         )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <h4 className="text-sm font-semibold text-slate-800 mb-3 border-b border-slate-100 pb-2">Rank History</h4>
+                  <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent">
+                    <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-indigo-100 text-indigo-600 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                        <Award className="w-5 h-5"/>
+                      </div>
+                      <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border border-slate-200 bg-white shadow-sm">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="font-bold text-slate-900">{member.rank.belt}</div>
+                          <div className="text-xs text-slate-500 font-medium">{member.rank.lastPromoted || 'Recent'}</div>
+                        </div>
+                        <div className="text-sm text-slate-500">Earliest grading date: {member.rank.nextEligibleDate || 'TBD'}</div>
+                      </div>
+                    </div>
+                    <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full border border-white bg-slate-100 text-slate-400 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                        <CheckCircle className="w-5 h-5"/>
+                      </div>
+                      <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border border-slate-200 bg-slate-50 shadow-sm">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="font-bold text-slate-600">Initial Registration</div>
+                          <div className="text-xs text-slate-400 font-medium">{member.joined}</div>
+                        </div>
+                        <div className="text-sm text-slate-400">Joined club</div>
+                      </div>
+                    </div>
+                  </div>
+               </Card>
+            </div>
+          )}
+
+          {tab === 'attendance' && (
+             <div className="max-w-4xl space-y-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900">Attendance Tracking</h3>
+                    <p className="text-sm text-slate-500">View check-in history across lifetime, rank, or month.</p>
+                  </div>
+                  <Button icon={Plus} size="sm" onClick={() => setShowManualSignIn(true)}>Manual Sign-in</Button>
+                </div>
+
+                <div className="flex bg-slate-100 p-1 rounded-lg w-fit">
+                   <button onClick={() => setAttendanceView('lifetime')} className={`px-4 py-1.5 text-sm font-medium rounded-md ${attendanceView === 'lifetime' ? 'bg-white shadow-sm text-blue-700' : 'text-slate-600'}`}>Lifetime ({member.attendance.total})</button>
+                   <button onClick={() => setAttendanceView('rank')} className={`px-4 py-1.5 text-sm font-medium rounded-md ${attendanceView === 'rank' ? 'bg-white shadow-sm text-blue-700' : 'text-slate-600'}`}>Current Rank ({member.rank.classesSincePromotion})</button>
+                   <button onClick={() => setAttendanceView('month')} className={`px-4 py-1.5 text-sm font-medium rounded-md ${attendanceView === 'month' ? 'bg-white shadow-sm text-blue-700' : 'text-slate-600'}`}>This Month ({member.attendance.thisMonth})</button>
+                </div>
+
+                { }
+                <Card className="p-5 border border-slate-200 shadow-sm">
+                  <h4 className="text-sm font-semibold text-slate-800 mb-4">Attendance Over Time</h4>
+                  <div className="h-64 w-full">
+                    {attendanceChartData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={attendanceChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                          <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
+                          <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: '#64748b' }} allowDecimals={false} />
+                          <Tooltip 
+                            cursor={{ fill: '#f1f5f9' }} 
+                            contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px', fontWeight: '500', color: '#0f172a' }}
+                            itemStyle={{ color: '#3b82f6', fontWeight: 'bold' }}
+                            formatter={(value) => [value, 'Classes']}
+                          />
+                          <Bar dataKey="classes" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={50} animationDuration={1000} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-full flex items-center justify-center text-sm text-slate-400">Not enough historical data to display graph.</div>
+                    )}
+                  </div>
+                </Card>
+
+                <Card className="overflow-hidden">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-slate-50 border-b border-slate-200 text-slate-500">
+                      <tr>
+                        <th className="p-4 font-semibold">Date</th>
+                        <th className="p-4 font-semibold">Class Name</th>
+                        <th className="p-4 font-semibold">Check-in Type</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {(member.attendance.history || []).map(h => (
+                         <tr key={h.id} className="hover:bg-slate-50">
+                           <td className="p-4 font-medium text-slate-900">{h.date}</td>
+                           <td className="p-4 text-slate-700">{h.className}</td>
+                           <td className="p-4"><Badge variant="green">Attended</Badge></td>
+                         </tr>
+                      ))}
+                      {(!member.attendance.history || member.attendance.history.length === 0) && (
+                        <tr><td colSpan="3" className="p-6 text-center text-slate-400">No recent check-ins recorded.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </Card>
+             </div>
+          )}
+
+          {tab === 'billing' && (
+             <div className="max-w-5xl space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                   <Card className="p-5 flex flex-col justify-center">
+                     <div className="text-sm font-semibold text-slate-500 uppercase mb-1">Outstanding Balance</div>
+                     <div className="flex items-center justify-between">
+                       <div className={`text-3xl font-bold ${member.balance > 0 ? 'text-rose-600' : 'text-slate-900'}`}>${member.balance.toFixed(2)}</div>
+                       <Button variant="outline" size="sm" onClick={() => handleBillingActionRequest('balance')}>Modify Balance</Button>
+                     </div>
+                     {member.balance > 0 && <Button variant="danger" size="sm" className="mt-3 w-fit" onClick={() => handleBillingActionRequest('payment')}>Collect Payment</Button>}
+                   </Card>
+                   <Card className="p-5 flex flex-col justify-center">
+                     <div className="text-sm font-semibold text-slate-500 uppercase mb-1">Available Credit</div>
+                     <div className="text-3xl font-bold text-emerald-600">${member.credit.toFixed(2)}</div>
+                     <div className="text-xs text-slate-500 mt-2">Can be applied to POS or next invoice.</div>
+                   </Card>
+                </div>
+
+                <Card className="p-5">
+                  <div className="flex justify-between items-center mb-4">
+                    <div className="text-sm font-semibold text-slate-700 uppercase flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-blue-600" /> Saved Payment Methods
+                    </div>
+                    <Button variant="outline" size="sm" icon={Plus} onClick={() => setShowAddCardModal(true)}>Add Card</Button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {(member.paymentMethods || []).map((pm) => (
+                      <div key={pm.id} className="flex items-center justify-between bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-7 bg-slate-900 text-white flex items-center justify-center rounded text-[10px] font-bold">CARD</div>
+                          <div>
+                            <div className="text-sm font-semibold text-slate-900">•••• •••• •••• {pm.name === 'Visa' ? '4242' : pm.name === 'Mastercard' ? '8812' : '1005'}</div>
+                            <div className="text-xs text-slate-500">Name: {pm.name} • Exp: {pm.expiry}</div>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => handleRemoveCard(pm.id)}
+                          className="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition-colors"
+                          title="Remove Card"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                    {(!member.paymentMethods || member.paymentMethods.length === 0) && (
+                      <div className="col-span-2 text-center py-6 text-slate-400 text-sm">No saved payment methods on file.</div>
+                    )}
+                  </div>
+                </Card>
+
+                <Card className="overflow-hidden">
+                  <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                    <h3 className="font-bold text-slate-900 flex items-center gap-2"><Wallet className="w-4 h-4"/> Billing History & Past Payments</h3>
+                    <Button variant="outline" size="sm" icon={Download}>Statement</Button>
+                  </div>
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-white border-b border-slate-200 text-slate-500">
+                      <tr>
+                        <th className="p-4 font-semibold uppercase text-xs">Date</th>
+                        <th className="p-4 font-semibold uppercase text-xs">Invoice #</th>
+                        <th className="p-4 font-semibold uppercase text-xs">Description</th>
+                        <th className="p-4 font-semibold uppercase text-xs">Status</th>
+                        <th className="p-4 font-semibold uppercase text-xs text-right">Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {DEMO_INVOICES.filter(i => i.member === member.name).map((inv, idx) => (
+                         <tr key={idx} className="hover:bg-slate-50">
+                           <td className="p-4 text-slate-600">{inv.date}</td>
+                           <td className="p-4 font-medium text-slate-900">{inv.id}</td>
+                           <td className="p-4 text-slate-700">{inv.type}</td>
+                           <td className="p-4">
+                              <Badge variant={inv.status === 'Paid' ? 'green' : inv.status === 'Failed' ? 'red' : inv.status === 'Refunded' ? 'gray' : 'yellow'}>
+                                {inv.status}
+                              </Badge>
+                           </td>
+                           <td className="p-4 text-right font-semibold text-slate-900">${inv.amount.toFixed(2)}</td>
+                         </tr>
+                      ))}
+                      {DEMO_INVOICES.filter(i => i.member === member.name).length === 0 && (
+                        <tr><td colSpan="5" className="p-8 text-center text-slate-500">No invoices found for this member.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </Card>
+             </div>
+          )}
+
+          {tab === 'documents' && (
+             <div className="max-w-4xl space-y-6">
+                <div className="flex justify-between items-center mb-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900">Signed Documents & Forms</h3>
+                    <p className="text-sm text-slate-500">Manage liability waivers, contracts, and medical releases.</p>
+                  </div>
+                  <Button icon={Plus}>Upload Document</Button>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-3">
+                  {member.documents.map(doc => (
+                    <div key={doc.id} className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow transition-shadow">
+                      <div className="flex items-center gap-4">
+                        <div className={`p-3 rounded-lg ${doc.status === 'Signed' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
+                           <FileText className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-slate-900">{doc.name}</div>
+                          <div className="text-xs text-slate-500 mt-1">Date: {doc.date}</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <Badge variant={doc.status === 'Signed' ? 'green' : 'yellow'}>{doc.status}</Badge>
+                        <Button variant="ghost" className="px-2 text-slate-400 hover:text-slate-700"><MoreVertical className="w-5 h-5"/></Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+             </div>
+          )}
+
+          {tab === 'communication' && (
+            <div className="h-full flex flex-col gap-6 max-w-4xl">
+              <div className="bg-slate-50 rounded-xl border border-slate-200 p-4">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="font-semibold text-slate-800 text-sm">Quick Message</h3>
+                  <div className="flex bg-white rounded-lg border border-slate-200 p-0.5">
+                    <button onClick={() => setMsgMode('sms')} className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${msgMode === 'sms' ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:text-slate-700'}`}>SMS</button>
+                    <button onClick={() => setMsgMode('email')} className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${msgMode === 'email' ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:text-slate-700'}`}>Email</button>
+                    <button onClick={() => setMsgMode('push')} className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${msgMode === 'push' ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:text-slate-700'}`}>Push / In-App</button>
+                  </div>
+                </div>
+                {member.parent && msgMode !== 'push' && (
+                  <div className="mb-3 flex items-center gap-2 text-xs text-amber-800 bg-amber-50 p-2 rounded-lg border border-amber-200">
+                    <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" /> 
+                    <span>Message will be sent to Parent/Guardian: <strong>{member.parent}</strong></span>
+                  </div>
+                )}
+                <textarea 
+                  className="w-full bg-white border border-slate-300 rounded-lg p-3 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none resize-none transition-shadow" 
+                  rows="3" 
+                  placeholder={`Type your ${msgMode} message here...`}
+                ></textarea>
+                <div className="flex justify-between items-center mt-3">
+                  <button className="text-slate-400 hover:text-slate-600 transition-colors"><Paperclip className="w-5 h-5" /></button>
+                  <Button icon={Send} className="py-1.5 px-4 text-sm">Send {msgMode.toUpperCase()}</Button>
+                </div>
+              </div>
+
+              <div className="flex-1 flex flex-col">
+                <h3 className="font-semibold text-slate-800 text-sm mb-4 flex items-center gap-2"><History className="w-4 h-4 text-slate-400"/> Communication History</h3>
+                <div className="space-y-4">
+                  <div className="flex flex-col items-start">
+                    <div className="max-w-[85%] sm:max-w-[70%] rounded-2xl p-3.5 text-sm bg-slate-100 text-slate-600 rounded-bl-sm border border-slate-200">
+                      Automated SMS: Your membership successfully renewed.
+                    </div>
+                    <div className="text-[11px] font-medium text-slate-400 mt-1.5 px-1">Jul 15, 08:00 AM • Automated</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* --- ALL MEMBERS PAGE MODALS --- */}
+      
+      {/* Admin PIN Authentication Modal for Billing */}
+      {showAdminPinModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white border border-slate-200 p-6 rounded-2xl max-w-sm w-full mx-4 shadow-2xl text-center">
+            <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4 border border-rose-200">
+              <Shield className="w-6 h-6" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-1">Admin Authorization</h3>
+            <p className="text-slate-500 text-xs mb-4">Enter Admin PIN to modify billing or initiate payment.</p>
+            {pinError && <p className="text-rose-600 text-xs font-semibold mb-4">Incorrect Admin PIN. Access Denied.</p>}
+            <input 
+              type="password" 
+              autoFocus
+              className="w-full bg-slate-50 border border-slate-300 text-slate-900 text-center text-3xl tracking-[0.5em] font-mono rounded-xl py-3 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 mb-6 shadow-inner"
+              value={adminPinInput}
+              onChange={(e) => setAdminPinInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleVerifyAdminPin(); }}
+              placeholder="••••"
+            />
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1" onClick={() => setShowAdminPinModal(false)}>Cancel</Button>
+              <Button className="flex-1" onClick={handleVerifyAdminPin}>Authorize</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manual Payment Modal */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white border border-slate-200 p-6 rounded-2xl max-w-md w-full mx-4 shadow-2xl">
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Process Manual Payment</h3>
+            <form onSubmit={handleManualPaymentSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Payment Amount ($)</label>
+                <Input required type="number" value={newPaymentForm.amount} onChange={e => setNewPaymentForm({...newPaymentForm, amount: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Description / Item</label>
+                <Input required value={newPaymentForm.description} onChange={e => setNewPaymentForm({...newPaymentForm, description: e.target.value})} />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button type="button" variant="outline" className="flex-1" onClick={() => setShowPaymentModal(false)}>Cancel</Button>
+                <Button type="submit" className="flex-1">Process Payment</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modify Balance Modal */}
+      {showBalanceModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white border border-slate-200 p-6 rounded-2xl max-w-md w-full mx-4 shadow-2xl">
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Modify Outstanding Balance</h3>
+            <form onSubmit={handleBalanceUpdateSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">New Balance Amount ($)</label>
+                <Input required type="number" step="0.01" value={newBalanceAmount} onChange={e => setNewBalanceAmount(e.target.value)} placeholder="0.00" />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button type="button" variant="outline" className="flex-1" onClick={() => setShowBalanceModal(false)}>Cancel</Button>
+                <Button type="submit" className="flex-1">Update Balance</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Card Modal */}
+      {showAddCardModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white border border-slate-200 p-6 rounded-2xl max-w-md w-full mx-4 shadow-2xl">
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Add Payment Method</h3>
+            <form onSubmit={handleAddCardSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Card Brand / Name</label>
+                <Input required placeholder="Visa / Mastercard" value={newCardForm.name} onChange={e => setNewCardForm({...newCardForm, name: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Expiry Date</label>
+                <Input required placeholder="12/29" value={newCardForm.expiry} onChange={e => setNewCardForm({...newCardForm, expiry: e.target.value})} />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button type="button" variant="outline" className="flex-1" onClick={() => setShowAddCardModal(false)}>Cancel</Button>
+                <Button type="submit" className="flex-1">Save Card</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Rank Override Modal */}
+      {showRankOverrideModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white border border-slate-200 p-6 rounded-2xl max-w-sm w-full mx-4 shadow-2xl text-center">
+            <AlertTriangle className="w-10 h-10 text-amber-500 mx-auto mb-3" />
+            <h3 className="text-lg font-bold text-slate-900 mb-2">Requirements Not Met</h3>
+            <p className="text-sm text-slate-600 mb-4">{promoErrorMsg}</p>
+            
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-left mb-6">
+               <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Instructor PIN Required</label>
+               {overridePinError && <p className="text-xs text-rose-600 font-semibold mb-2">{overridePinError}</p>}
+               <Input type="password" placeholder="Enter PIN" value={overridePin} onChange={e => setOverridePin(e.target.value)} />
+            </div>
+
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1" onClick={() => setShowRankOverrideModal(false)}>Cancel</Button>
+              <Button variant="danger" className="flex-1" onClick={attemptOverride}>Override</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manual Sign-in Modal */}
+      {showManualSignIn && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white border border-slate-200 p-6 rounded-2xl max-w-sm w-full mx-4 shadow-2xl">
+             <h3 className="text-lg font-bold text-slate-900 mb-4">Manual Class Sign-in</h3>
+             <form onSubmit={handleManualSignIn} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Date</label>
+                  <Input required type="date" value={signInForm.date} onChange={e => setSignInForm({...signInForm, date: e.target.value})} />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Select Class</label>
+                  <select 
+                    required className="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-lg p-2.5 outline-none focus:ring-blue-500"
+                    value={signInForm.classId} onChange={e => setSignInForm({...signInForm, classId: e.target.value})}
+                  >
+                    <option value="" disabled>Select a class...</option>
+                    {getClassesForDate(signInForm.date).map(c => <option key={c.id} value={c.id}>{c.title} ({c.startTime})</option>)}
+                  </select>
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <Button type="button" variant="outline" className="flex-1" onClick={() => setShowManualSignIn(false)}>Cancel</Button>
+                  <Button type="submit" className="flex-1">Record Sign-in</Button>
+                </div>
+             </form>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+};
+
+const CommunicationPage = () => {
+  const [activeTab, setActiveTab] = useState('hub');
+
+  return (
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Communication Hub</h1>
+          <p className="text-slate-500">Manage marketing campaigns, announcements, and member messaging.</p>
+        </div>
+        <div className="flex gap-2">
+           <Button variant="outline" icon={Megaphone}>New Announcement</Button>
+           <Button icon={Plus}>Create Campaign</Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+         <Card className="p-4 border-l-4 border-l-blue-500">
+           <div className="text-sm text-slate-500 mb-1">Messages Sent (MTD)</div>
+           <div className="text-2xl font-bold text-slate-900">4,251</div>
+           <div className="text-xs text-slate-500 mt-1">Emails, SMS & Push</div>
+         </Card>
+         <Card className="p-4 border-l-4 border-l-emerald-500">
+           <div className="text-sm text-slate-500 mb-1">Avg. Open Rate</div>
+           <div className="text-2xl font-bold text-slate-900">68%</div>
+           <div className="text-xs text-emerald-600 mt-1 flex items-center"><ArrowUpRight className="w-3 h-3 mr-1"/> +5% vs last month</div>
+         </Card>
+         <Card className="p-4 border-l-4 border-l-amber-500">
+           <div className="text-sm text-slate-500 mb-1">Active Automations</div>
+           <div className="text-2xl font-bold text-slate-900">8</div>
+           <div className="text-xs text-slate-500 mt-1">Birthdays, Renewals, Trials</div>
+         </Card>
+         <Card className="p-4 border-l-4 border-l-purple-500">
+           <div className="text-sm text-slate-500 mb-1">Unread Inquiries</div>
+           <div className="text-2xl font-bold text-slate-900">3</div>
+           <div className="text-xs text-purple-600 mt-1 font-medium">Needs attention</div>
+         </Card>
+      </div>
+
+      <Card className="flex flex-col h-[850px] overflow-hidden shadow-sm">
+        <div className="border-b border-slate-200 bg-white shrink-0">
+          <div className="flex px-4 pt-2 gap-4">
+            <button 
+              className={`pb-3 px-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'hub' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}`}
+              onClick={() => setActiveTab('hub')}
+            >
+              <Inbox className="w-4 h-4" /> Unified Inbox
+            </button>
+            <button 
+              className={`pb-3 px-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'marketing' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'}`}
+              onClick={() => setActiveTab('marketing')}
+            >
+              <Mail className="w-4 h-4" /> Marketing Campaigns
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 flex overflow-hidden">
+          {activeTab === 'hub' ? (
+            <>
+              <div className="w-full md:w-1/3 border-r border-slate-200 flex flex-col bg-slate-50/50">
+                <div className="p-3 border-b border-slate-200">
+                  <Input icon={SearchIcon} placeholder="Search conversations..." className="bg-white" />
+                </div>
+                <div className="flex-1 overflow-y-auto">
+                  {DEMO_MESSAGES_LIST.map((msg, i) => (
+                    <div key={msg.id} className={`p-4 border-b border-slate-100 cursor-pointer transition-colors ${i === 0 ? 'bg-white border-l-4 border-l-blue-500' : 'hover:bg-white border-l-4 border-l-transparent'}`}>
+                      <div className="flex justify-between items-start mb-1.5">
+                        <span className={`font-semibold text-sm ${msg.unread ? 'text-slate-900' : 'text-slate-700'}`}>{msg.user}</span>
+                        <span className={`text-xs ${msg.unread ? 'text-blue-600 font-medium' : 'text-slate-400'}`}>{msg.time}</span>
+                      </div>
+                      <div className="text-[10px] uppercase font-bold tracking-wider text-blue-600/70 mb-1.5">{msg.type}</div>
+                      <p className={`text-sm truncate ${msg.unread ? 'text-slate-900 font-medium' : 'text-slate-500'}`}>{msg.preview}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="hidden md:flex flex-1 flex-col bg-white">
+                <div className="p-4 border-b border-slate-200 flex justify-between items-center bg-white shadow-sm z-10">
+                  <div>
+                    <h3 className="font-bold text-slate-900">Sarah Jenkins</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">Coach-to-Student Messaging</p>
+                  </div>
+                  <Button variant="outline" size="sm">View Profile</Button>
+                </div>
+                <div className="flex-1 p-6 flex flex-col gap-4 overflow-y-auto bg-slate-50/80">
+                  <div className="text-center text-xs font-medium text-slate-400 my-4">July 18, 2026</div>
+                  <div className="flex flex-col items-end">
+                    <div className="max-w-[70%] rounded-2xl p-3.5 text-sm bg-blue-600 text-white rounded-br-sm shadow-sm">
+                      Hey Sarah, just a reminder about the belt testing this weekend. Let me know if you have any questions!
+                    </div>
+                    <div className="text-[11px] font-medium text-slate-400 mt-1.5 px-1">Sent by Coach Davis</div>
+                  </div>
+                  <div className="flex flex-col items-start">
+                    <div className="max-w-[70%] rounded-2xl p-3.5 text-sm bg-white border border-slate-200 text-slate-800 rounded-bl-sm shadow-sm">
+                      Thanks Coach! I've been practicing the sequences. What time should I arrive?
+                    </div>
+                    <div className="text-[11px] font-medium text-slate-400 mt-1.5 px-1">Received from App</div>
+                  </div>
+                </div>
+                <div className="p-4 border-t border-slate-200 bg-white">
+                  <div className="relative flex items-end gap-3">
+                    <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors mb-1">
+                      <Paperclip className="w-5 h-5" />
+                    </button>
+                    <div className="flex-1 relative">
+                      <textarea 
+                        className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-4 pr-12 py-3 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none resize-none transition-shadow" 
+                        rows="2" 
+                        placeholder="Reply to Sarah..."
+                      ></textarea>
+                      <button className="absolute right-2 bottom-2 p-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+                        <Send className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="w-full overflow-auto p-4 bg-slate-50">
+              <table className="w-full text-left border-collapse bg-white rounded-xl shadow-sm border border-slate-200">
+                <thead className="border-b border-slate-200 bg-slate-50/50">
+                  <tr>
+                    <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Campaign Name</th>
+                    <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Channel</th>
+                    <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                    <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Sent</th>
+                    <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Open / Delivery Rate</th>
+                    <th className="p-4 w-10"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {DEMO_CAMPAIGNS.map(camp => (
+                    <tr key={camp.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="p-4">
+                        <div className="font-semibold text-slate-900 text-sm">{camp.name}</div>
+                        <div className="text-xs text-slate-500 mt-1">{camp.date}</div>
+                      </td>
+                      <td className="p-4 text-sm text-slate-700 font-medium">
+                        <div className="flex items-center gap-1.5">
+                          {camp.type === 'Email' ? <Mail className="w-4 h-4 text-slate-400"/> : camp.type === 'Automated SMS' ? <Smartphone className="w-4 h-4 text-slate-400"/> : <Megaphone className="w-4 h-4 text-slate-400"/>}
+                          {camp.type}
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <Badge variant={camp.status === 'Active' ? 'green' : camp.status === 'Sent' ? 'blue' : 'yellow'}>{camp.status}</Badge>
+                      </td>
+                      <td className="p-4 text-sm text-right font-medium text-slate-900">{camp.sent.toLocaleString()}</td>
+                      <td className="p-4 text-sm text-right font-medium text-slate-900">{camp.openRate}</td>
+                      <td className="p-4 text-right">
+                        <button className="text-slate-400 hover:text-slate-600 p-1 rounded hover:bg-slate-100 transition-colors"><MoreVertical className="w-4 h-4" /></button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+const StaffManagementPage = ({ members, staffList, setStaffList, adminLoggedInStaff }) => {
+  const [showModal, setShowModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showRosterModal, setShowRosterModal] = useState(false);
+  const [modalStep, setModalStep] = useState('choice'); 
+  const [editingStaff, setEditingStaff] = useState(null);
+  
+  const [newStaffForm, setNewStaffForm] = useState({ name: '', role: 'Assistant', email: '' });
+  const [selectedMemberId, setSelectedMemberId] = useState('');
+  const [expandedStaffId, setExpandedStaffId] = useState(null);
+  const [rosterForm, setRosterForm] = useState({ start: '', end: '', wage: 0 });
+
+  const roleOptions = ["Assistant", "Instructor", "Lead instructor", "Owner"];
+  const isHighLevelAdmin = adminLoggedInStaff && ['Owner', 'Head Coach'].includes(adminLoggedInStaff.role);
+
+  const openModal = () => {
+    setModalStep('choice');
+    setNewStaffForm({ name: '', role: 'Assistant', email: '' });
+    setSelectedMemberId('');
+    setShowModal(true);
+  };
+
+  const handleAddExisting = (e) => {
+    e.preventDefault();
+    const member = members.find(m => m.id === selectedMemberId);
+    if (!member) return;
+    const newStaff = {
+      id: `STF-${Date.now()}`,
+      name: member.name,
+      role: newStaffForm.role,
+      email: member.email,
+      status: 'Active',
+      classes: 0,
+      pin: generatePin(),
+      wage: 20.00,
+      roster: { day: 'Mon - Fri', start: '16:00', end: '20:00' }
+    };
+    setStaffList([...staffList, newStaff]);
+    setShowModal(false);
+  };
+
+  const handleAddNew = (e) => {
+    e.preventDefault();
+    const newStaff = {
+      id: `STF-${Date.now()}`,
+      name: newStaffForm.name,
+      role: newStaffForm.role,
+      email: newStaffForm.email,
+      status: 'Active',
+      classes: 0,
+      pin: generatePin(),
+      wage: 20.00,
+      roster: { day: 'Mon - Fri', start: '16:00', end: '20:00' }
+    };
+    setStaffList([...staffList, newStaff]);
+    setShowModal(false);
+  };
+
+  const handleEditClick = (staff) => {
+    setEditingStaff(staff);
+    setNewStaffForm({ name: staff.name, role: staff.role, email: staff.email });
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = (e) => {
+    e.preventDefault();
+    setStaffList(staffList.map(s => s.id === editingStaff.id ? { ...s, name: newStaffForm.name, role: newStaffForm.role, email: newStaffForm.email } : s));
+    setShowEditModal(false);
+  };
+
+  const handleRosterClick = (staff) => {
+    setEditingStaff(staff);
+    setRosterForm({ start: staff.roster.start, end: staff.roster.end, wage: staff.wage });
+    setShowRosterModal(true);
+  };
+
+  const handleSaveRoster = (e) => {
+    e.preventDefault();
+    setStaffList(staffList.map(s => s.id === editingStaff.id ? { 
+      ...s, 
+      wage: Number(rosterForm.wage), 
+      roster: { ...s.roster, start: rosterForm.start, end: rosterForm.end }
+    } : s));
+    setShowRosterModal(false);
+  };
+
+  const getPinDisplay = (staff) => {
+    if (isHighLevelAdmin) return staff.pin;
+    if (adminLoggedInStaff && adminLoggedInStaff.id === staff.id) return staff.pin;
+    return '••••';
+  };
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-500 pb-12 max-w-5xl">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Staff Management</h1>
+          <p className="text-slate-500 text-sm">Manage staff profiles, roles, and shift schedules.</p>
+        </div>
+        <Button icon={Plus} onClick={openModal}>Add Staff Member</Button>
+      </div>
+
+      <Card className="p-6 space-y-4">
+        {staffList.map(stf => (
+          <div key={stf.id} className="bg-slate-50 border border-slate-200 rounded-xl overflow-hidden transition-all duration-300">
+            <div 
+              className="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-100"
+              onClick={() => setExpandedStaffId(expandedStaffId === stf.id ? null : stf.id)}
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold text-lg">
+                  {stf.name.charAt(0)}
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                    {stf.name} 
+                    <span className="text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-mono">PIN: {getPinDisplay(stf)}</span>
+                  </h4>
+                  <div className="text-xs text-slate-500 mt-0.5 flex gap-3">
+                    <span>Role: <strong className="text-slate-700">{stf.role}</strong></span>
+                    <span>Email: <strong className="text-slate-700">{stf.email}</strong></span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <Badge variant="green">{stf.status}</Badge>
+                <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); handleEditClick(stf); }}>Edit Profile</Button>
+                {expandedStaffId === stf.id ? <ChevronDown className="w-5 h-5 text-slate-400" /> : <ChevronLeft className="w-5 h-5 text-slate-400" />}
+              </div>
+            </div>
+            
+            {expandedStaffId === stf.id && (
+              <div className="p-4 border-t border-slate-200 bg-white flex flex-col md:flex-row gap-6 justify-between items-center animate-in slide-in-from-top-2">
+                <div className="flex-1">
+                   <h5 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Roster & Payroll</h5>
+                   <div className="flex gap-6 items-center">
+                      <div>
+                        <div className="text-sm text-slate-600 font-medium">Standard Hours ({stf.roster.day})</div>
+                        <div className="text-lg font-bold text-slate-900 mt-1">
+                          {stf.roster.start} - {stf.roster.end} <span className="text-sm font-normal text-slate-500 ml-1">({getElapsedHours(stf.roster.start, stf.roster.end)} hrs)</span>
+                        </div>
+                      </div>
+                      <div className="pl-6 border-l border-slate-200">
+                         <div className="text-sm text-slate-600 font-medium">Hourly Rate</div>
+                         <div className="text-lg font-bold text-emerald-600 mt-1">${stf.wage.toFixed(2)} / hr</div>
+                      </div>
+                   </div>
+                </div>
+                {isHighLevelAdmin && (
+                   <Button variant="secondary" icon={Clock} onClick={() => handleRosterClick(stf)}>Edit Roster & Wage</Button>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </Card>
+
+      {/* Edit Staff Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white border border-slate-200 p-6 rounded-2xl max-w-md w-full mx-4 shadow-2xl relative">
+             <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-slate-900">Edit Staff Profile</h3>
+                <button onClick={() => setShowEditModal(false)} className="text-slate-400 hover:text-slate-600"><X className="w-5 h-5" /></button>
+             </div>
+             <form onSubmit={handleSaveEdit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Full Name</label>
+                  <Input required value={newStaffForm.name} onChange={e => setNewStaffForm({...newStaffForm, name: e.target.value})} />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Email Address</label>
+                  <Input required type="email" value={newStaffForm.email} onChange={e => setNewStaffForm({...newStaffForm, email: e.target.value})} />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Assigned Role</label>
+                  <select 
+                    className="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-lg p-2.5 outline-none focus:ring-blue-500 focus:border-blue-500"
+                    value={newStaffForm.role}
+                    onChange={e => setNewStaffForm({...newStaffForm, role: e.target.value})}
+                  >
+                    {roleOptions.map(r => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <Button type="button" variant="outline" className="flex-1" onClick={() => setShowEditModal(false)}>Cancel</Button>
+                  <Button type="submit" className="flex-1">Save Changes</Button>
+                </div>
+             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Roster Modal */}
+      {showRosterModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white border border-slate-200 p-6 rounded-2xl max-w-md w-full mx-4 shadow-2xl relative">
+             <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-slate-900">Edit Roster & Wages</h3>
+                <button onClick={() => setShowRosterModal(false)} className="text-slate-400 hover:text-slate-600"><X className="w-5 h-5" /></button>
+             </div>
+             <form onSubmit={handleSaveRoster} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Hourly Wage ($)</label>
+                  <Input required type="number" step="0.50" value={rosterForm.wage} onChange={e => setRosterForm({...rosterForm, wage: e.target.value})} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Start Time</label>
+                    <Input required type="time" value={rosterForm.start} onChange={e => setRosterForm({...rosterForm, start: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">End Time</label>
+                    <Input required type="time" value={rosterForm.end} onChange={e => setRosterForm({...rosterForm, end: e.target.value})} />
+                  </div>
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <Button type="button" variant="outline" className="flex-1" onClick={() => setShowRosterModal(false)}>Cancel</Button>
+                  <Button type="submit" className="flex-1">Save Shift Settings</Button>
+                </div>
+             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Staff Modal Options */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white border border-slate-200 p-6 rounded-2xl max-w-md w-full mx-4 shadow-2xl relative">
+            {modalStep === 'choice' && (
+              <>
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-bold text-slate-900">Add Staff Member</h3>
+                  <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 gap-4">
+                  <button onClick={() => setModalStep('existing')} className="p-4 border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-blue-300 transition-colors flex items-center gap-4 text-left">
+                     <div className="bg-blue-100 p-3 rounded-lg text-blue-600"><User className="w-6 h-6"/></div>
+                     <div>
+                       <h4 className="font-bold text-slate-900">Assign Current Member</h4>
+                     </div>
+                  </button>
+                  <button onClick={() => setModalStep('new')} className="p-4 border border-slate-200 rounded-xl hover:bg-slate-50 hover:border-emerald-300 transition-colors flex items-center gap-4 text-left">
+                     <div className="bg-emerald-100 p-3 rounded-lg text-emerald-600"><Briefcase className="w-6 h-6"/></div>
+                     <div>
+                       <h4 className="font-bold text-slate-900">Create New Profile</h4>
+                     </div>
+                  </button>
+                </div>
+              </>
+            )}
+
+            {modalStep === 'existing' && (
+              <form onSubmit={handleAddExisting} className="space-y-4">
+                  <h3 className="text-xl font-bold mb-4">Assign Existing Member</h3>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Select Member</label>
+                    <select 
+                      required className="w-full bg-white border border-slate-300 rounded-lg p-2.5"
+                      value={selectedMemberId} onChange={e => setSelectedMemberId(e.target.value)}
+                    >
+                      <option value="" disabled>Select a member...</option>
+                      {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Assigned Role</label>
+                  <select 
+                    className="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-lg p-2.5 outline-none"
+                    value={newStaffForm.role} onChange={e => setNewStaffForm({...newStaffForm, role: e.target.value})}
+                  >
+                    {roleOptions.map(r => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                </div>
+                  <div className="flex gap-3 pt-2">
+                    <Button type="button" variant="outline" className="flex-1" onClick={() => setShowModal(false)}>Cancel</Button>
+                    <Button type="submit" className="flex-1">Add Staff</Button>
+                  </div>
+              </form>
+            )}
+
+            {modalStep === 'new' && (
+              <form onSubmit={handleAddNew} className="space-y-4">
+                  <h3 className="text-xl font-bold mb-4">New Staff Profile</h3>
+                  <Input required placeholder="Full Name" value={newStaffForm.name} onChange={e => setNewStaffForm({...newStaffForm, name: e.target.value})} />
+                  <Input required type="email" placeholder="Email" value={newStaffForm.email} onChange={e => setNewStaffForm({...newStaffForm, email: e.target.value})} />
+                  <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Assigned Role</label>
+                  <select 
+                    className="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-lg p-2.5 outline-none"
+                    value={newStaffForm.role} onChange={e => setNewStaffForm({...newStaffForm, role: e.target.value})}
+                  >
+                    {roleOptions.map(r => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                </div>
+                  <div className="flex gap-3 pt-2">
+                    <Button type="button" variant="outline" className="flex-1" onClick={() => setShowModal(false)}>Cancel</Button>
+                    <Button type="submit" className="flex-1">Add Staff</Button>
+                  </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const AdminSettingsPage = ({ rankStructures, setRankStructures, ageGroups, setAgeGroups, clubDocuments, setClubDocuments }) => {
+  const [showAddRankModal, setShowAddRankModal] = useState(false);
+  const [showEditRankModal, setShowEditRankModal] = useState(false);
+  const [editingRank, setEditingRank] = useState(null);
+  
+  const [newRankForm, setNewRankForm] = useState({ name: '', requiredClasses: 20, timeframeMonths: 6, color: 'bg-blue-600' });
+  const [newAgeGroupInput, setNewAgeGroupInput] = useState('');
+
+  const [showUploadDocModal, setShowUploadDocModal] = useState(false);
+  const [newDocForm, setNewDocForm] = useState({ name: '', type: 'Waiver', fileUrl: '#' });
+
+  const beltColors = [
+    { label: 'White Belt', value: 'bg-white border border-slate-300' },
+    { label: 'Yellow Belt', value: 'bg-yellow-400' },
+    { label: 'Orange Belt', value: 'bg-orange-500' },
+    { label: 'Green Belt', value: 'bg-emerald-500' },
+    { label: 'Blue Belt', value: 'bg-blue-600' },
+    { label: 'Purple Belt', value: 'bg-purple-600' },
+    { label: 'Brown Belt', value: 'bg-amber-800' },
+    { label: 'Black Belt', value: 'bg-slate-900 text-white' },
+  ];
+
+  const handleAddRankSubmit = (e) => {
+    e.preventDefault();
+    const created = {
+      id: Date.now(),
+      ...newRankForm
+    };
+    setRankStructures([...rankStructures, created]);
+    setShowAddRankModal(false);
+    setNewRankForm({ name: '', requiredClasses: 20, timeframeMonths: 6, color: 'bg-blue-600' });
+  };
+
+  const handleStartEditRank = (rank) => {
+    setEditingRank(rank);
+    setNewRankForm({ name: rank.name, requiredClasses: rank.requiredClasses, timeframeMonths: rank.timeframeMonths || 6, color: rank.color });
+    setShowEditRankModal(true);
+  };
+
+  const handleSaveEditRank = (e) => {
+    e.preventDefault();
+    if (!editingRank) return;
+    setRankStructures(rankStructures.map(r => r.id === editingRank.id ? { ...r, ...newRankForm } : r));
+    setShowEditRankModal(false);
+    setEditingRank(null);
+  };
+
+  const handleDeleteRank = (rankId) => {
+    setRankStructures(rankStructures.filter(r => r.id !== rankId));
+  };
+
+  const handleAddAgeGroup = (e) => {
+    e.preventDefault();
+    if (newAgeGroupInput.trim() && !ageGroups.includes(newAgeGroupInput.trim())) {
+      setAgeGroups([...ageGroups, newAgeGroupInput.trim()]);
+      setNewAgeGroupInput('');
+    }
+  };
+
+  const handleRemoveAgeGroup = (group) => {
+    setAgeGroups(ageGroups.filter(ag => ag !== group));
+  };
+
+  const handleUploadDocSubmit = (e) => {
+    e.preventDefault();
+    const created = {
+      id: `DOC-${Date.now()}`,
+      name: newDocForm.name,
+      type: newDocForm.type,
+      uploadedAt: new Date().toISOString().split('T')[0],
+      size: '1.2 MB'
+    };
+    setClubDocuments([...clubDocuments, created]);
+    setShowUploadDocModal(false);
+    setNewDocForm({ name: '', type: 'Waiver', fileUrl: '#' });
+  };
+
+  const handleDeleteDoc = (docId) => {
+    setClubDocuments(clubDocuments.filter(d => d.id !== docId));
+  };
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-500 pb-12 max-w-5xl">
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">Club Rank & Settings</h1>
+        <p className="text-slate-500">Configure rank hierarchy, attendance/timeframe requirements, age groups, and document templates.</p>
+      </div>
+
+      <Card className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2"><Award className="w-5 h-5 text-blue-600"/> Rank Structures & Requirements</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Define promotion class counts and minimum timeframe requirements per rank.</p>
+          </div>
+          <Button icon={Plus} onClick={() => {
+            setNewRankForm({ name: '', requiredClasses: 20, timeframeMonths: 6, color: 'bg-blue-600' });
+            setShowAddRankModal(true);
+          }}>Add Rank</Button>
+        </div>
+
+        <div className="space-y-3">
+          {rankStructures.map(rs => (
+            <div key={rs.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl gap-4">
+              <div className="flex items-center gap-4">
+                <div className={`w-6 h-6 rounded-full ${rs.color} shrink-0 shadow-2xs`}></div>
+                <div>
+                  <h4 className="font-bold text-slate-900 text-sm">{rs.name}</h4>
+                  <div className="text-xs text-slate-500 mt-0.5">
+                    Required Classes: <strong className="text-slate-700">{rs.requiredClasses}</strong> • Min Timeframe: <strong className="text-slate-700">{rs.timeframeMonths || 6} months</strong>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" icon={Edit3} onClick={() => handleStartEditRank(rs)}>Edit</Button>
+                <Button variant="danger" size="sm" icon={Trash2} onClick={() => handleDeleteRank(rs.id)}>Remove</Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card className="p-6">
+        <div className="mb-6">
+          <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2"><Users className="w-5 h-5 text-emerald-600"/> Pre-determined Age Groups</h3>
+          <p className="text-xs text-slate-500 mt-0.5">Manage age groups available when building or scheduling classes.</p>
+        </div>
+
+        <form onSubmit={handleAddAgeGroup} className="flex gap-3 mb-6">
+          <div className="flex-1">
+            <Input placeholder="e.g. Teens (12-15) or Masters (30+)" value={newAgeGroupInput} onChange={e => setNewAgeGroupInput(e.target.value)} />
+          </div>
+          <Button type="submit">Add Age Group</Button>
+        </form>
+
+        <div className="flex flex-wrap gap-2">
+          {ageGroups.map(ag => (
+            <div key={ag} className="flex items-center gap-2 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-lg text-sm font-medium text-slate-800">
+              <span>{ag}</span>
+              <button onClick={() => handleRemoveAgeGroup(ag)} className="text-slate-400 hover:text-rose-600 transition-colors">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2"><FileText className="w-5 h-5 text-indigo-600"/> Documents & Templates</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Upload and manage risk waivers, incident reports, and membership agreements.</p>
+          </div>
+          <Button icon={Upload} onClick={() => setShowUploadDocModal(true)}>Upload Document</Button>
+        </div>
+
+        <div className="space-y-3">
+          {clubDocuments.map(doc => (
+            <div key={doc.id} className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-indigo-100 text-indigo-600 rounded-lg">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-900 text-sm">{doc.name}</h4>
+                  <div className="text-xs text-slate-500 mt-0.5 flex gap-3">
+                    <span>Type: <strong className="text-slate-700">{doc.type}</strong></span>
+                    <span>Uploaded: <strong className="text-slate-700">{doc.uploadedAt}</strong></span>
+                    <span>Size: <strong className="text-slate-700">{doc.size}</strong></span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" icon={Download}>Download</Button>
+                <Button variant="danger" size="sm" icon={Trash2} onClick={() => handleDeleteDoc(doc.id)}>Remove</Button>
+              </div>
+            </div>
+          ))}
+          {clubDocuments.length === 0 && (
+            <div className="text-center py-8 text-slate-400 text-sm">No documents uploaded yet.</div>
+          )}
+        </div>
+      </Card>
+
+      {/* Admin Settings Modals */}
+      {showAddRankModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white border border-slate-200 p-6 rounded-2xl max-w-md w-full mx-4 shadow-2xl">
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Add New Rank</h3>
+            <form onSubmit={handleAddRankSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Rank Name</label>
+                <Input required placeholder="e.g. Orange Belt" value={newRankForm.name} onChange={e => setNewRankForm({...newRankForm, name: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Required Classes</label>
+                <Input required type="number" value={newRankForm.requiredClasses} onChange={e => setNewRankForm({...newRankForm, requiredClasses: Number(e.target.value)})} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Required Timeframe (Months)</label>
+                <Input required type="number" value={newRankForm.timeframeMonths} onChange={e => setNewRankForm({...newRankForm, timeframeMonths: Number(e.target.value)})} placeholder="6" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Belt Color / Badge</label>
+                <select 
+                  className="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-lg p-2.5 outline-none"
+                  value={newRankForm.color}
+                  onChange={e => setNewRankForm({...newRankForm, color: e.target.value})}
+                >
+                  {beltColors.map(bc => <option key={bc.value} value={bc.value}>{bc.label}</option>)}
+                </select>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button type="button" variant="outline" className="flex-1" onClick={() => setShowAddRankModal(false)}>Cancel</Button>
+                <Button type="submit" className="flex-1">Create Rank</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showEditRankModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white border border-slate-200 p-6 rounded-2xl max-w-md w-full mx-4 shadow-2xl">
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Edit Rank Requirements</h3>
+            <form onSubmit={handleSaveEditRank} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Rank Name</label>
+                <Input required placeholder="e.g. Orange Belt" value={newRankForm.name} onChange={e => setNewRankForm({...newRankForm, name: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Required Classes</label>
+                <Input required type="number" value={newRankForm.requiredClasses} onChange={e => setNewRankForm({...newRankForm, requiredClasses: Number(e.target.value)})} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Required Timeframe (Months)</label>
+                <Input required type="number" value={newRankForm.timeframeMonths} onChange={e => setNewRankForm({...newRankForm, timeframeMonths: Number(e.target.value)})} placeholder="6" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Belt Color / Badge</label>
+                <select 
+                  className="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-lg p-2.5 outline-none"
+                  value={newRankForm.color}
+                  onChange={e => setNewRankForm({...newRankForm, color: e.target.value})}
+                >
+                  {beltColors.map(bc => <option key={bc.value} value={bc.value}>{bc.label}</option>)}
+                </select>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button type="button" variant="outline" className="flex-1" onClick={() => setShowEditRankModal(false)}>Cancel</Button>
+                <Button type="submit" className="flex-1">Save Changes</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showUploadDocModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white border border-slate-200 p-6 rounded-2xl max-w-md w-full mx-4 shadow-2xl">
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Upload Document Template</h3>
+            <form onSubmit={handleUploadDocSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Document Name</label>
+                <Input required placeholder="e.g. Adult Risk Waiver 2026" value={newDocForm.name} onChange={e => setNewDocForm({...newDocForm, name: e.target.value})} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Document Type</label>
+                <select 
+                  className="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-lg p-2.5 outline-none"
+                  value={newDocForm.type}
+                  onChange={e => setNewDocForm({...newDocForm, type: e.target.value})}
+                >
+                  <option value="Waiver">Liability Waiver</option>
+                  <option value="Incident Report">Incident Report Form</option>
+                  <option value="Agreement">Membership Agreement</option>
+                  <option value="Medical">Medical Release Form</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">File Upload</label>
+                <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer">
+                  <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                  <p className="text-xs font-medium text-slate-700">Click to upload or drag & drop</p>
+                  <p className="text-[10px] text-slate-400 mt-1">PDF, DOCX up to 10MB</p>
+                </div>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button type="button" variant="outline" className="flex-1" onClick={() => setShowUploadDocModal(false)}>Cancel</Button>
+                <Button type="submit" className="flex-1">Upload</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const KioskView = ({ onExit, members, setMembers, classes, staffList }) => {
+  const [emailInput, setEmailInput] = useState('');
+  const [step, setStep] = useState('identify'); // identify, select-class, success
+  const [foundMember, setFoundMember] = useState(null);
+  const [selectedClassId, setSelectedClassId] = useState('');
+  
+  const [showExitModal, setShowExitModal] = useState(false);
+  const [exitPin, setExitPin] = useState('');
+  const [exitError, setExitError] = useState('');
+
+  const todayStr = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+  const todayClasses = classes.filter(c => c.day === todayStr);
+
+  const handleIdentify = (e) => {
+    e.preventDefault();
+    const m = members.find(mbr => mbr.email.toLowerCase() === emailInput.toLowerCase());
+    if (m) {
+      setFoundMember(m);
+      setStep('select-class');
+    } else {
+      alert("Member not found. Please see front desk.");
+    }
+  };
+
+  const handleCheckIn = (e) => {
+    e.preventDefault();
+    const cls = classes.find(c => c.id === selectedClassId);
+    if (!cls || !foundMember) return;
+
+    const dateStr = new Date().toISOString().split('T')[0];
+    const newHistory = { id: `kiosk-${Date.now()}`, date: dateStr, className: cls.title };
+
+    const updated = members.map(m => {
+      if (m.id === foundMember.id) {
+        return {
+          ...m,
+          rank: { ...m.rank, classesSincePromotion: m.rank.classesSincePromotion + 1 },
+          attendance: {
+            ...m.attendance,
+            total: m.attendance.total + 1,
+            thisMonth: m.attendance.thisMonth + 1,
+            lastAttended: dateStr,
+            history: [newHistory, ...(m.attendance.history || [])]
+          }
+        };
+      }
+      return m;
+    });
+    
+    setMembers(updated);
+    setStep('success');
+    
+    setTimeout(() => {
+      setStep('identify');
+      setEmailInput('');
+      setFoundMember(null);
+      setSelectedClassId('');
+    }, 4000);
+  };
+
+  const handleExitAttempt = (e) => {
+    e.preventDefault();
+    const staff = staffList.find(s => s.pin === exitPin);
+    if (staff) {
+      onExit();
+    } else {
+      setExitError("Invalid Staff PIN.");
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-900 flex flex-col items-center justify-center font-sans">
+       <button onClick={() => setShowExitModal(true)} className="absolute top-6 right-6 text-slate-500 hover:text-slate-300 flex items-center gap-2 text-sm font-medium">
+         <Lock className="w-4 h-4" /> Staff Exit
+       </button>
+
+       <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-500">
+         <div className="p-10 text-center bg-blue-600 text-white">
+            <h1 className="text-3xl font-bold mb-2">Self Check-in</h1>
+            <p className="text-blue-100 font-medium">Welcome! Please sign in for your class.</p>
+         </div>
+
+         <div className="p-10">
+            {step === 'identify' && (
+              <form onSubmit={handleIdentify} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Enter your Email Address</label>
+                  <input 
+                    required autoFocus type="email" placeholder="student@example.com"
+                    className="w-full text-lg p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all"
+                    value={emailInput} onChange={e => setEmailInput(e.target.value)}
+                  />
+                </div>
+                <Button type="submit" className="w-full py-4 text-lg" size="lg">Continue</Button>
+              </form>
+            )}
+
+            {step === 'select-class' && (
+              <form onSubmit={handleCheckIn} className="space-y-6">
+                <div className="text-center mb-6">
+                  <h3 className="text-xl font-bold text-slate-900">Hello, {foundMember.name.split(' ')[0]}!</h3>
+                  <p className="text-slate-500 mt-1">Select the class you are attending today.</p>
+                </div>
+                
+                <div className="space-y-3">
+                  {todayClasses.map(cls => (
+                    <label key={cls.id} className={`flex items-center justify-between p-4 border rounded-xl cursor-pointer transition-colors ${selectedClassId === cls.id ? 'border-blue-600 bg-blue-50' : 'border-slate-200 hover:bg-slate-50'}`}>
+                      <div>
+                        <div className="font-bold text-slate-900">{cls.title}</div>
+                        <div className="text-sm text-slate-500">{cls.startTime}</div>
+                      </div>
+                      <input 
+                        type="radio" name="classSelect" value={cls.id}
+                        className="w-5 h-5 text-blue-600"
+                        checked={selectedClassId === cls.id} onChange={(e) => setSelectedClassId(e.target.value)}
+                      />
+                    </label>
+                  ))}
+                  {todayClasses.length === 0 && <div className="text-center text-slate-500 py-4">No classes scheduled for today.</div>}
+                </div>
+
+                <div className="flex gap-4">
+                  <Button type="button" variant="outline" className="flex-1 py-4 text-lg" size="lg" onClick={() => setStep('identify')}>Cancel</Button>
+                  <Button type="submit" disabled={!selectedClassId} className="flex-1 py-4 text-lg" size="lg">Check-in</Button>
+                </div>
+              </form>
+            )}
+
+            {step === 'success' && (
+              <div className="text-center py-8 animate-in fade-in zoom-in duration-300">
+                <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <CheckCircle className="w-10 h-10" />
+                </div>
+                <h3 className="text-2xl font-bold text-slate-900 mb-2">You're checked in!</h3>
+                <p className="text-slate-600 mb-4">Have a great class.</p>
+                <div className="text-sm text-slate-500 bg-slate-50 p-3 rounded-lg inline-block">
+                  <strong className="text-indigo-600">{foundMember.rank.requiredClasses - (foundMember.rank.classesSincePromotion + 1)} classes</strong> left until your next rank evaluation!
+                </div>
+              </div>
+            )}
+         </div>
+       </div>
+
+       {showExitModal && (
+         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white border border-slate-200 p-8 rounded-2xl max-w-sm w-full mx-4 shadow-2xl text-center">
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Secure Staff Exit</h3>
+            <p className="text-sm text-slate-600 mb-6">Enter PIN to close kiosk mode.</p>
+            {exitError && <p className="text-rose-600 text-sm font-semibold mb-4">{exitError}</p>}
+            <form onSubmit={handleExitAttempt}>
+               <input 
+                 autoFocus type="password" 
+                 className="w-full bg-slate-50 border border-slate-300 text-slate-900 text-center text-3xl tracking-[0.5em] font-mono rounded-xl py-3 outline-none focus:border-blue-500 mb-6"
+                 value={exitPin} onChange={e => setExitPin(e.target.value)} placeholder="••••"
+               />
+               <div className="flex gap-3">
+                 <Button type="button" variant="outline" className="flex-1" onClick={() => {setShowExitModal(false); setExitPin(''); setExitError('');}}>Cancel</Button>
+                 <Button type="submit" className="flex-1 bg-slate-900 text-white hover:bg-slate-800">Exit Kiosk</Button>
+               </div>
+            </form>
+          </div>
+         </div>
+       )}
+    </div>
+  );
+};
+
+function App() 
         // --- PASTE YOUR ENTIRE CODE FILE HERE (remove the top import statements) ---
         // (The code you provided goes here, starting from `const Card = ...` down to `export default function App()`)
         // Make sure to change "export default function App()" to just "function App()" 
